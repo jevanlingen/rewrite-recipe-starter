@@ -13,7 +13,7 @@
 # limitations under the License.
 ---
 type: specs.openrewrite.org/v1beta/example
-recipeName: com.yourorg.AssertEqualsToAssertThat
+recipeName: com.jevanlingen.AssertEqualsToAssertThat
 examples:
 - description: ''
   sources:
@@ -36,7 +36,7 @@ examples:
     language: java
 ---
 type: specs.openrewrite.org/v1beta/example
-recipeName: com.yourorg.EqualsAvoidsNullRecipe
+recipeName: com.jevanlingen.EqualsAvoidsNullRecipe
 examples:
 - description: ''
   sources:
@@ -63,7 +63,7 @@ examples:
     language: java
 ---
 type: specs.openrewrite.org/v1beta/example
-recipeName: com.yourorg.FindSpringBeans
+recipeName: com.jevanlingen.FindSpringBeans
 examples:
 - description: ''
   sources:
@@ -122,7 +122,7 @@ examples:
     language: java
 ---
 type: specs.openrewrite.org/v1beta/example
-recipeName: com.yourorg.NoCollectionMutation
+recipeName: com.jevanlingen.NoCollectionMutation
 examples:
 - description: ''
   sources:
@@ -155,7 +155,7 @@ examples:
     language: java
 ---
 type: specs.openrewrite.org/v1beta/example
-recipeName: com.yourorg.NoGuavaListsNewArrayList
+recipeName: com.jevanlingen.NoGuavaListsNewArrayList
 examples:
 - description: ''
   sources:
@@ -177,7 +177,7 @@ examples:
     language: java
 ---
 type: specs.openrewrite.org/v1beta/example
-recipeName: com.yourorg.SimplifyTernaryRecipes
+recipeName: com.jevanlingen.SimplifyTernaryRecipes
 examples:
 - description: ''
   sources:
@@ -234,7 +234,7 @@ examples:
     language: java
 ---
 type: specs.openrewrite.org/v1beta/example
-recipeName: com.yourorg.TrackJavaTodos
+recipeName: com.jevanlingen.TrackJavaTodos
 examples:
 - description: ''
   sources:
@@ -252,27 +252,7 @@ examples:
     language: java
 ---
 type: specs.openrewrite.org/v1beta/example
-recipeName: com.yourorg.TrackJavaTodosFile
-examples:
-- description: ''
-  parameters:
-  - '## Test Header'
-  sources:
-  - before: |
-      class A {
-          // TODO: Have fun
-          /* TODO: Test your code */
-          // Just a regular comment
-          public String foo() {
-            // TODO: Learn
-            return "bar";
-          }
-          // Another regular comment
-      }
-    language: java
----
-type: specs.openrewrite.org/v1beta/example
-recipeName: com.yourorg.TrackTodos
+recipeName: com.jevanlingen.TrackJavaTodosFile
 examples:
 - description: ''
   parameters:
@@ -292,7 +272,27 @@ examples:
     language: java
 ---
 type: specs.openrewrite.org/v1beta/example
-recipeName: com.yourorg.UpdateConcoursePipeline
+recipeName: com.jevanlingen.TrackTodos
+examples:
+- description: ''
+  parameters:
+  - '## Test Header'
+  sources:
+  - before: |
+      class A {
+          // TODO: Have fun
+          /* TODO: Test your code */
+          // Just a regular comment
+          public String foo() {
+            // TODO: Learn
+            return "bar";
+          }
+          // Another regular comment
+      }
+    language: java
+---
+type: specs.openrewrite.org/v1beta/example
+recipeName: com.jevanlingen.UpdateConcoursePipeline
 examples:
 - description: ''
   parameters:
@@ -317,7 +317,7 @@ examples:
     language: yaml
 ---
 type: specs.openrewrite.org/v1beta/example
-recipeName: com.yourorg.UseApacheStringUtils
+recipeName: com.jevanlingen.UseApacheStringUtils
 examples:
 - description: ''
   sources:
@@ -340,7 +340,7 @@ examples:
     language: java
 ---
 type: specs.openrewrite.org/v1beta/example
-recipeName: com.yourorg.UseIntegerValueOf
+recipeName: com.jevanlingen.UseIntegerValueOf
 examples:
 - description: ''
   sources:
@@ -355,7 +355,7 @@ examples:
     language: java
 ---
 type: specs.openrewrite.org/v1beta/example
-recipeName: com.yourorg.UseOpenRewriteNullable
+recipeName: com.jevanlingen.UseOpenRewriteNullable
 examples:
 - description: ''
   sources:
@@ -376,7 +376,7 @@ examples:
     language: java
 ---
 type: specs.openrewrite.org/v1beta/example
-recipeName: com.yourorg.UseSdkManJavaVersion
+recipeName: com.jevanlingen.UseSdkManJavaVersion
 examples:
 - description: ''
   sources:

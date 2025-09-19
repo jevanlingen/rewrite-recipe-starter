@@ -8,7 +8,7 @@ To begin, fork this repository and customize it by:
 
 1. Changing the root project name in `settings.gradle.kts`.
 2. Changing the `group` in `build.gradle.kts`.
-3. Changing the package structure from `com.yourorg` to whatever you want.
+3. Changing the package structure from `com.jevanlingen` to whatever you want.
 
 ## Getting started
 
@@ -22,23 +22,23 @@ available in the OpenRewrite docs that provides more details than the below READ
 ## Reference recipes
 
 * [META-INF/rewrite/stringutils.yml](./src/main/resources/META-INF/rewrite/stringutils.yml) - A declarative YAML recipe that replaces usages of `org.springframework.util.StringUtils` with `org.apache.commons.lang3.StringUtils`.
-  * [UseApacheStringUtilsTest](./src/test/java/com/yourorg/UseApacheStringUtilsTest.java) - A test class for the `com.yourorg.UseApacheStringUtils` recipe.
-* [NoGuavaListsNewArrayList.java](./src/main/java/com/yourorg/NoGuavaListsNewArrayList.java) - An imperative Java recipe that replaces usages of `com.google.common.collect.Lists` with `new ArrayList<>()`.
-  * [NoGuavaListsNewArrayListTest.java](./src/test/java/com/yourorg/NoGuavaListsNewArrayListTest.java) - A test class for the `NoGuavaListsNewArrayList` recipe.
-* [SimplifyTernary](./src/main/java/com/yourorg/SimplifyTernary.java) - An Refaster style recipe that simplifies ternary expressions.
-  * [SimplifyTernaryTest](./src/test/java/com/yourorg/SimplifyTernaryTest.java) - A test class for the `SimplifyTernary` recipe.
-* [EqualsAvoidsNull](./src/main/java/com/yourorg/EqualsAvoidsNull.java) - A Refaster recipe that ensures `equals()` method calls avoid null pointer exceptions by calling equals on literals, by using `@Matches` on parameters.
-  * [EqualsAvoidsNullTest](./src/test/java/com/yourorg/EqualsAvoidsNullTest.java) - A test class for the `EqualsAvoidsNull` recipe.
-* [AssertEqualsToAssertThat](./src/main/java/com/yourorg/AssertEqualsToAssertThat.java) - An imperative Java recipe that replaces JUnit's `assertEquals` with AssertJ's `assertThat`, to show how to handle classpath dependencies.
-  * [AssertEqualsToAssertThatTest](./src/test/java/com/yourorg/AssertEqualsToAssertThatTest.java) - A test class for the `AssertEqualsToAssertThat` recipe.
-* [AppendToReleaseNotes](./src/main/java/com/yourorg/AppendToReleaseNotes.java) - A ScanningRecipe that appends a message to the release notes of a project.
-  * [AppendToReleaseNotesTest](./src/test/java/com/yourorg/AppendToReleaseNotesTest.java) - A test class for the `AppendToReleaseNotes` recipe.
-* [FindSpringBeans](./src/main/java/com/yourorg/FindSpringBeans.java) - A recipe that demonstrates how to use Traits to produce a data table on Spring `@Bean`s in a project.
-  * [FindSpringBeansTest](./src/test/java/com/yourorg/FindSpringBeansTest.java) - A test class for the `FindSpringBeans` recipe.
-* [ClassHierarchy](./src/main/java/com/yourorg/ClassHierarchy.java) - A recipe that demonstrates how to produce a data table on the class hierarchy of a project.
-  * [ClassHierarchyTest](./src/test/java/com/yourorg/ClassHierarchyTest.java) - A test class for the `ClassHierarchy` recipe.
-* [UpdateConcoursePipeline](./src/main/java/com/yourorg/UpdateConcoursePipeline.java) - A recipe that demonstrates how to update a Concourse pipeline, as an example of operating on Yaml files.
-  * [UpdateConcoursePipelineTest](./src/test/java/com/yourorg/UpdateConcoursePipelineTest.java) - A test class for the `UpdateConcoursePipeline` recipe.
+  * [UseApacheStringUtilsTest](./src/test/java/com/jevanlingen/UseApacheStringUtilsTest.java) - A test class for the `com.jevanlingen.UseApacheStringUtils` recipe.
+* [NoGuavaListsNewArrayList.java](./src/main/java/com/jevanlingen/NoGuavaListsNewArrayList.java) - An imperative Java recipe that replaces usages of `com.google.common.collect.Lists` with `new ArrayList<>()`.
+  * [NoGuavaListsNewArrayListTest.java](./src/test/java/com/jevanlingen/NoGuavaListsNewArrayListTest.java) - A test class for the `NoGuavaListsNewArrayList` recipe.
+* [SimplifyTernary](./src/main/java/com/jevanlingen/SimplifyTernary.java) - An Refaster style recipe that simplifies ternary expressions.
+  * [SimplifyTernaryTest](./src/test/java/com/jevanlingen/SimplifyTernaryTest.java) - A test class for the `SimplifyTernary` recipe.
+* [EqualsAvoidsNull](./src/main/java/com/jevanlingen/EqualsAvoidsNull.java) - A Refaster recipe that ensures `equals()` method calls avoid null pointer exceptions by calling equals on literals, by using `@Matches` on parameters.
+  * [EqualsAvoidsNullTest](./src/test/java/com/jevanlingen/EqualsAvoidsNullTest.java) - A test class for the `EqualsAvoidsNull` recipe.
+* [AssertEqualsToAssertThat](./src/main/java/com/jevanlingen/AssertEqualsToAssertThat.java) - An imperative Java recipe that replaces JUnit's `assertEquals` with AssertJ's `assertThat`, to show how to handle classpath dependencies.
+  * [AssertEqualsToAssertThatTest](./src/test/java/com/jevanlingen/AssertEqualsToAssertThatTest.java) - A test class for the `AssertEqualsToAssertThat` recipe.
+* [AppendToReleaseNotes](./src/main/java/com/jevanlingen/AppendToReleaseNotes.java) - A ScanningRecipe that appends a message to the release notes of a project.
+  * [AppendToReleaseNotesTest](./src/test/java/com/jevanlingen/AppendToReleaseNotesTest.java) - A test class for the `AppendToReleaseNotes` recipe.
+* [FindSpringBeans](./src/main/java/com/jevanlingen/FindSpringBeans.java) - A recipe that demonstrates how to use Traits to produce a data table on Spring `@Bean`s in a project.
+  * [FindSpringBeansTest](./src/test/java/com/jevanlingen/FindSpringBeansTest.java) - A test class for the `FindSpringBeans` recipe.
+* [ClassHierarchy](./src/main/java/com/jevanlingen/ClassHierarchy.java) - A recipe that demonstrates how to produce a data table on the class hierarchy of a project.
+  * [ClassHierarchyTest](./src/test/java/com/jevanlingen/ClassHierarchyTest.java) - A test class for the `ClassHierarchy` recipe.
+* [UpdateConcoursePipeline](./src/main/java/com/jevanlingen/UpdateConcoursePipeline.java) - A recipe that demonstrates how to update a Concourse pipeline, as an example of operating on Yaml files.
+  * [UpdateConcoursePipelineTest](./src/test/java/com/jevanlingen/UpdateConcoursePipelineTest.java) - A test class for the `UpdateConcoursePipeline` recipe.
 
 ## Local Publishing for Testing
 
@@ -66,12 +66,12 @@ In the pom.xml of a different project you wish to test your recipe out in, make 
                 <version>RELEASE</version>
                 <configuration>
                     <activeRecipes>
-                        <recipe>com.yourorg.NoGuavaListsNewArrayList</recipe>
+                        <recipe>com.jevanlingen.NoGuavaListsNewArrayList</recipe>
                     </activeRecipes>
                 </configuration>
                 <dependencies>
                     <dependency>
-                        <groupId>com.yourorg</groupId>
+                        <groupId>com.jevanlingen</groupId>
                         <artifactId>rewrite-recipe-starter</artifactId>
                         <version>0.1.0-SNAPSHOT</version>
                     </dependency>
@@ -97,11 +97,11 @@ repositories {
 }
 
 dependencies {
-    rewrite("com.yourorg:rewrite-recipe-starter:latest.integration")
+    rewrite("com.jevanlingen:rewrite-recipe-starter:latest.integration")
 }
 
 rewrite {
-    activeRecipe("com.yourorg.NoGuavaListsNewArrayList")
+    activeRecipe("com.jevanlingen.NoGuavaListsNewArrayList")
 }
 ```
 
