@@ -167,6 +167,273 @@ internal class TransformToKotlinTest : RewriteTest {
         )
     }
 
+    @Test
+    fun `generics`() {
+        rewriteRunJavaToKotlin(
+            """
+            import java.util.List;
+
+            class A<T> {
+                private List<T> list;
+
+                <U> void b(U u) {
+                }
+            }
+            """.trimIndent(),
+            """
+            import java.util.List;
+
+            class A<T> {
+                private var list: List<T>?
+
+                fun <U> b(u: U?) {
+                }
+            }
+            """.trimIndent()
+        )
+    }
+
+    @Test
+    fun `annotations`() {
+        rewriteRunJavaToKotlin(
+            """
+            @Deprecated
+            class A {
+                @Deprecated
+                String a;
+
+                @Deprecated
+                void b() {
+                }
+            }
+            """.trimIndent(),
+            """
+            @Deprecated
+            class A {
+                @Deprecated
+                private var a: String?
+
+                @Deprecated
+                fun b() {
+                }
+            }
+            """.trimIndent()
+        )
+    }
+
+    @Test
+    fun `type cast`() {
+        rewriteRunJavaToKotlin(
+            """
+            class A {
+                void b(Object o) {
+                    String s = (String) o;
+                }
+            }
+            """.trimIndent(),
+            """
+            class A {
+                fun b(o: Any?) {
+                    val s = o as String?
+                }
+            }
+            """.trimIndent()
+        )
+    }
+
+    @Test
+    fun `switch`() {
+        rewriteRunJavaToKotlin(
+            """
+            class A {
+                void b(int i) {
+                    switch (i) {
+                        case 0:
+                            System.out.println("zero");
+                            break;
+                        case 1:
+                            System.out.println("one");
+                            break;
+                        default:
+                            System.out.println("other");
+                    }
+                }
+            }
+            """.trimIndent(),
+            """
+            class A {
+                fun b(i: Int) {
+                    when (i) {
+                        0 -> System.out.println("zero")
+                        1 -> System.out.println("one")
+                        else -> System.out.println("other")
+                    }
+                }
+            }
+            """.trimIndent()
+        )
+    }
+
+    @Test
+    fun `while loop`() {
+        rewriteRunJavaToKotlin(
+            """
+            class A {
+                void b() {
+                    int i = 0;
+                    while (i < 10) {
+                        System.out.println(i);
+                        i++;
+                    }
+                }
+            }
+            """.trimIndent(),
+            """
+            class A {
+                fun b() {
+                    var i = 0
+                    while (i < 10) {
+                        System.out.println(i)
+                        i++
+                    }
+                }
+            }
+            """.trimIndent()
+        )
+    }
+
+    @Test
+    fun `if-else`() {
+        rewriteRunJavaToKotlin(
+            """
+            class A {
+                void b(int i) {
+                    if (i == 0) {
+                        System.out.println("zero");
+                    } else if (i == 1) {
+                        System.out.println("one");
+                    } else {
+                        System.out.println("other");
+                    }
+                }
+            }
+            """.trimIndent(),
+            """
+            class A {
+                fun b(i: Int) {
+                    if (i == 0) {
+                        System.out?.println("zero")
+                    } else if (i == 1) {
+                        System.out?.println("one")
+                    } else {
+                        System.out?.println("other")
+                    }
+                }
+            }
+            """.trimIndent()
+        )
+    }
+
+    @Test
+    fun `for loop`() {
+        rewriteRunJavaToKotlin(
+            """
+            import java.util.List;
+
+            class A {
+                void b(List<String> list) {
+                    for (String s : list) {
+                        System.out.println(s);
+                    }
+                }
+            }
+            """.trimIndent(),
+            """
+            import java.util.List;
+
+            class A {
+                fun b(list: List<String>?) {
+                    for (s in list) {
+                        System.out.println(s)
+                    }
+                }
+            }
+            """.trimIndent()
+        )
+    }
+
+    @Test
+    fun `static members`() {
+        rewriteRunJavaToKotlin(
+            """
+            class A {
+                static String b;
+                static void c() {
+                }
+            }
+            """.trimIndent(),
+            """
+            class A {
+                companion object {
+                    var b: String?
+                    fun c() {
+                    }
+                }
+            }
+            """.trimIndent()
+        )
+    }
+
+    @Test
+    fun `interface`() {
+        rewriteRunJavaToKotlin(
+            """
+            interface A {
+                void b();
+            }
+            """.trimIndent(),
+            """
+            interface A {
+                fun b()
+            }
+            """.trimIndent()
+        )
+    }
+
+    @Test
+    fun `enum`() {
+        rewriteRunJavaToKotlin(
+            """
+            enum A {
+                B, C
+            }
+            """.trimIndent(),
+            """
+            enum class A {
+                B, C
+            }
+            """.trimIndent()
+        )
+    }
+
+    @Test
+    fun `constructor with properties`() {
+        rewriteRunJavaToKotlin(
+            """
+              class A {
+                  private final String prop;
+                  A(String prop) {
+                      this.prop = prop;
+                  }
+              }
+              """.trimIndent(),
+            """
+              class A(private val prop: String?) {
+              }
+              """.trimIndent(),
+        )
+    }
+
     private fun rewriteRunJavaToKotlin(@Language("java") before: String, @Language("kotlin") after: String) {
         rewriteRun(
             { spec ->

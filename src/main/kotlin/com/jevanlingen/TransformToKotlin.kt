@@ -91,7 +91,7 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
             }
 
             override fun visitMethodDeclaration(m: J.MethodDeclaration, p: PrintOutputCapture<OutputCaptureContext>): J {
-                val modifiers = m.modifiers
+                val modifiers = m.modifiers.toMutableList()
                 if (!m.isConstructor) {
                     modifiers += J.Modifier(randomId(), SINGLE_SPACE, EMPTY, "fun", LanguageExtension, emptyList())
                 }
