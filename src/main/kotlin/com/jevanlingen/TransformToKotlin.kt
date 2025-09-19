@@ -105,13 +105,13 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                 visit(method.leadingAnnotations, p)
                 method.modifiers.forEach { visitModifier(it, p) }
 
-                method.getAnnotations().typeParameters?.let {
+                method.annotations.typeParameters?.let {
                     visit(it.annotations, p)
                     visitSpace(it.prefix, Space.Location.TYPE_PARAMETERS, p)
                     visitMarkers(it.markers, p)
                     p.append("<")
                     visitRightPadded(
-                        it.getPadding().getTypeParameters(),
+                        it.padding.getTypeParameters(),
                         JRightPadded.Location.TYPE_PARAMETER,
                         ",",
                         p
@@ -119,10 +119,10 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                     p.append(">")
                 }
 
-                visit(method.getAnnotations().name.annotations, p)
+                visit(method.annotations.name.annotations, p)
                 visit(method.name, p)
 
-                val params = method.getPadding().parameters
+                val params = method.padding.parameters
                 beforeSyntax(
                     params.before,
                     params.markers,
@@ -131,7 +131,7 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                 )
                 p.append("(")
                 p.context.isInMethodDeclarationsArguments = true
-                val elements = params.getPadding().getElements()
+                val elements = params.padding.getElements()
                 for (i in elements.indices) {
                     val element = elements[i]
                     val suffix = if (i == elements.size - 1) "" else ","
@@ -198,7 +198,7 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                 }
 
                 val containsTypeReceiver = multiVariable.markers.findFirst(Extension::class.java).isPresent
-                val variables = multiVariable.getPadding().variables
+                val variables = multiVariable.padding.variables
 
                 for (i in variables.indices) {
                     val variable = variables.get(i)
@@ -221,7 +221,7 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                         p.append("?") // make every declaration type nullable
                     }
 
-                    variable.getElement().getPadding().initializer?.let {
+                    variable.getElement().padding.initializer?.let {
                         visitSpace(it.before, VARIABLE_INITIALIZER, p)
                     }
 
@@ -250,7 +250,7 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
             ): J {
                 beforeSyntax(method, METHOD_INVOCATION_PREFIX, p)
 
-                visitRightPadded(method.getPadding().select, METHOD_SELECT, p)
+                visitRightPadded(method.padding.select, METHOD_SELECT, p)
                 if (method.select != null) {
                     println("----")
                     println(method.select)
@@ -268,7 +268,7 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                 visit(method.name, p)
                 visitContainer(
                     "<",
-                    method.getPadding().typeParameters,
+                    method.padding.typeParameters,
                     TYPE_PARAMETERS,
                     ",",
                     ">",
@@ -276,7 +276,7 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                 )
 
                 visitArgumentsContainer(
-                    method.getPadding().arguments,
+                    method.padding.arguments,
                     METHOD_INVOCATION_ARGUMENTS,
                     p
                 )
@@ -298,7 +298,7 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                 p: PrintOutputCapture<OutputCaptureContext>
             ) {
                 visitSpace(argContainer.getBefore(), argsLocation, p)
-                val args = argContainer.getPadding().getElements()
+                val args = argContainer.padding.getElements()
                 p.append('(')
                 for (i in 0..<args.size) {
                     if (i > 0) {
