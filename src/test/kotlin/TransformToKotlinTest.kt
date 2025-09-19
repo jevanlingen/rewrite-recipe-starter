@@ -264,12 +264,45 @@ internal class TransformToKotlinTest : RewriteTest {
             """
             class A {
                 fun b(i: Int) {
-                    when (i) {
-                        0 -> System.out.println("zero")
-                        1 -> System.out.println("one")
-                        else -> System.out.println("other")
-                    }
+                    /* Switch statements don't translate directly to Kotlin’s `when` expression. Handle these cases manually to ensure correct fallthrough behavior.
+                        switch (i) {
+                            case 0:
+                                System.out?.println("zero")
+                                break
+                            case 1:
+                                System.out?.println("one")
+                                break
+                            default:
+                                System.out?.println("other")
+                        }*/
                 }
+            }
+            """.trimIndent()
+        )
+    }
+
+    @Test
+    fun `switch expression`() {
+        rewriteRunJavaToKotlin(
+            """
+            class A {
+                String b(int i) {
+                    return switch (i) {
+                        case 0 -> "zero";
+                        case 1 -> "one";
+                        default -> "other";
+                    };
+                }
+            }
+            """.trimIndent(),
+            """
+            class A {
+                fun b(i: Int) =
+                    when (i) {
+                        0 -> "zero";
+                        1 -> "one";
+                        else -> "other";
+                    }
             }
             """.trimIndent()
         )
@@ -319,7 +352,7 @@ internal class TransformToKotlinTest : RewriteTest {
             """.trimIndent(),
             """
             class A {
-                fun b(i: Int) {
+                fun b(i: Int) =
                     if (i == 0) {
                         System.out?.println("zero")
                     } else if (i == 1) {
@@ -327,12 +360,28 @@ internal class TransformToKotlinTest : RewriteTest {
                     } else {
                         System.out?.println("other")
                     }
-                }
             }
             """.trimIndent()
         )
     }
 
+    @Test
+    fun `interface`() {
+        rewriteRunJavaToKotlin(
+            """
+            interface A {
+                void b();
+            }
+            """.trimIndent(),
+            """
+            interface A {
+                fun b()
+            }
+            """.trimIndent()
+        )
+    }
+
+    // TODO SUPPORT THESE CASES BELOW
     @Test
     fun `for loop`() {
         rewriteRunJavaToKotlin(
@@ -378,22 +427,6 @@ internal class TransformToKotlinTest : RewriteTest {
                     fun c() {
                     }
                 }
-            }
-            """.trimIndent()
-        )
-    }
-
-    @Test
-    fun `interface`() {
-        rewriteRunJavaToKotlin(
-            """
-            interface A {
-                void b();
-            }
-            """.trimIndent(),
-            """
-            interface A {
-                fun b()
             }
             """.trimIndent()
         )

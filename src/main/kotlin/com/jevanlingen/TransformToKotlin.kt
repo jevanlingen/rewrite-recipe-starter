@@ -75,11 +75,11 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
         class ExtendedKotlinJavaPrinter(kp: KotlinPrinter<OutputCaptureContext>) :
             KotlinJavaPrinter<OutputCaptureContext>(kp) {
             override fun visitBlock(block: J.Block, p: PrintOutputCapture<OutputCaptureContext>): J {
-                if (p.context.isInMethodBodyDeclarationsSingleExpressionFunction) {
+                if (p.context.isInMethodBodyDeclarationsSingleExpressionFunction == block) {
                     var statement = block.statements.first()
                     if (statement is J.Return) {
                         statement = statement.withMarkers(statement.markers.add(ImplicitReturn(randomId())))
-                    } else if (statement is J.VariableDeclarations) {
+                    } else if (statement is J.VariableDeclarations || statement is J.Switch) {
                         // exception when we can't turn it into a single expression function after all
                         return super.visitBlock(block, p)
                     }
@@ -165,9 +165,9 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                     }
                 }
 
-                p.context.isInMethodBodyDeclarationsSingleExpressionFunction = isSingleExpressionFunction
+                p.context.isInMethodBodyDeclarationsSingleExpressionFunction = if (isSingleExpressionFunction) method.body else null
                 visit(method.body, p)
-                p.context.isInMethodBodyDeclarationsSingleExpressionFunction = false
+                p.context.isInMethodBodyDeclarationsSingleExpressionFunction = null
                 afterSyntax(method, p)
                 return method
             }
@@ -180,7 +180,7 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
             }
 
             override fun visitPrimitive(primitive: J.Primitive, p: PrintOutputCapture<OutputCaptureContext>): J {
-                val keyword = if (primitive.type == Void) "Unit" else primitive.type.toString()
+                val keyword = if (primitive.type == Void) "Unit" else primitive.type.name
                 beforeSyntax(primitive, PRIMITIVE_PREFIX, p)
                 p.append(keyword)
                 afterSyntax(primitive, p)
@@ -227,7 +227,9 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                     if (multiVariable.typeExpression != null && variable.getElement().initializer == null) {
                         p.append(":")
                         visit(multiVariable.typeExpression!!.withPrefix<TypeTree>(Space.EMPTY), p)
-                        p.append("?") // make every declaration type nullable
+                        if (variable.element.type !is JavaType.Primitive) {
+                            p.append("?") // make every declaration type nullable
+                        }
                     }
 
                     variable.getElement().padding.initializer?.let {
@@ -311,6 +313,51 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                 return j;
             }
 
+            override fun visitSwitch(switch_: J.Switch, p: PrintOutputCapture<OutputCaptureContext>): J {
+                p.append("\n/* Switch statements don't translate directly to Kotlin’s `when` expression. Handle these cases manually to ensure correct fallthrough behavior.")
+                val s = super.visitSwitch(switch_, p)
+                p.append("*/")
+                return s;
+            }
+
+            override fun visitSwitchExpression(switch_: J.SwitchExpression, p: PrintOutputCapture<OutputCaptureContext>): J {
+                beforeSyntax(switch_, SWITCH_EXPRESSION_PREFIX, p);
+                p.append("when");
+                visit(switch_.selector, p);
+                visit(switch_.cases, p);
+                afterSyntax(switch_, p);
+                return switch_;
+            }
+
+            override fun visitCase(case_: J.Case, p: PrintOutputCapture<OutputCaptureContext>): J {
+                beforeSyntax(case_, CASE_PREFIX, p)
+                var c = case_
+                val elem = case_.caseLabels.first()
+                if (elem is J.Identifier && elem.simpleName == "default") {
+                    c = c.withCaseLabels(mutableListOf(elem.withSimpleName("else") as J))
+                }
+                visitContainer("", c.getPadding().caseLabels, JContainer.Location.CASE_LABEL, ",", "", p)
+                if (case_.guard != null) {
+                    p.append("if")
+                    visit(case_.guard, p)
+                }
+                visitSpace(case_.getPadding().statements.before, CASE, p)
+                p.append("->")
+                visitStatements(
+                    case_.getPadding().statements.getPadding().getElements(), JRightPadded.Location.CASE, p
+                )
+                if (case_.body is Statement) {
+                    visitStatement(
+                        case_.getPadding().body as JRightPadded<Statement>?,
+                        JRightPadded.Location.CASE_BODY, p
+                    )
+                } else {
+                    visitRightPadded(case_.getPadding().body, JRightPadded.Location.CASE_BODY, ";", p)
+                }
+                afterSyntax(case_, p)
+                return case_
+            }
+
             private fun visitArgumentsContainer(
                 argContainer: JContainer<Expression>,
                 argsLocation: Space.Location,
@@ -333,7 +380,7 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
 
 data class OutputCaptureContext(
     var isInMethodDeclarationsArguments: Boolean = false,
-    var isInMethodBodyDeclarationsSingleExpressionFunction: Boolean = false,
+    var isInMethodBodyDeclarationsSingleExpressionFunction: Any? = null,
     var isInLambdaParameters: Boolean = false,
 )
 
