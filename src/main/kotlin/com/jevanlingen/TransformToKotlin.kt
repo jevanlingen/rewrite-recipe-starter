@@ -26,7 +26,7 @@ import org.openrewrite.marker.Markers.EMPTY
 class TransformToKotlin : ScanningRecipe<Accumulator>() {
     override fun getDisplayName() = "Java to Kotlin transformer"
 
-    override fun getDescription()= "Replaces Java files with Kotlin equivalent."
+    override fun getDescription() = "Replaces Java files with Kotlin equivalent."
 
     override fun getInitialValue(ctx: ExecutionContext) = Accumulator(mutableListOf())
 
@@ -46,7 +46,8 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
         acc.javaSources.forEach { cu ->
             val printOutputCapture = PrintOutputCapture(OutputCaptureContext())
             JavaAsKotlinPrinter().visit(cu, printOutputCapture)
-            kotlinSources.add(KotlinParser.builder().build()
+            kotlinSources.add(
+                KotlinParser.builder().build()
                 .parse(printOutputCapture.getOut())
                 .map { AutoFormatVisitorForWholeFile<ExecutionContext>().visitNonNull(it, ctx) }
                 .map { it.cast<K.CompilationUnit>() }
@@ -71,7 +72,8 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
     private class JavaAsKotlinPrinter : KotlinPrinter<OutputCaptureContext>() {
         override fun delegate(): ExtendedKotlinJavaPrinter = ExtendedKotlinJavaPrinter(this)
 
-        class ExtendedKotlinJavaPrinter(kp: KotlinPrinter<OutputCaptureContext>) : KotlinJavaPrinter<OutputCaptureContext>(kp) {
+        class ExtendedKotlinJavaPrinter(kp: KotlinPrinter<OutputCaptureContext>) :
+            KotlinJavaPrinter<OutputCaptureContext>(kp) {
             override fun visitBlock(block: J.Block, p: PrintOutputCapture<OutputCaptureContext>): J {
                 if (p.context.isInMethodBodyDeclarationsSingleExpressionFunction) {
                     var statement = block.statements.first()
@@ -90,7 +92,10 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                 return super.visitBlock(block, p)
             }
 
-            override fun visitMethodDeclaration(m: J.MethodDeclaration, p: PrintOutputCapture<OutputCaptureContext>): J {
+            override fun visitMethodDeclaration(
+                m: J.MethodDeclaration,
+                p: PrintOutputCapture<OutputCaptureContext>
+            ): J {
                 val modifiers = m.modifiers.toMutableList()
                 if (!m.isConstructor) {
                     modifiers += J.Modifier(randomId(), SINGLE_SPACE, EMPTY, "fun", LanguageExtension, emptyList())
@@ -103,6 +108,10 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                 method.modifiers.forEach { visitModifier(it, p) }
 
                 method.annotations.typeParameters?.let {
+                    if (method.modifiers.isNotEmpty()) {
+                        p.append(" ")
+                    }
+
                     visit(it.annotations, p)
                     visitSpace(it.prefix, Space.Location.TYPE_PARAMETERS, p)
                     visitMarkers(it.markers, p)
@@ -201,6 +210,9 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                     val variable = variables.get(i)
 
                     if (!isFinal && !p.context.isInMethodDeclarationsArguments && !p.context.isInLambdaParameters) {
+                        if (multiVariable.typeExpression != null) {
+                            p.append(multiVariable.typeExpression!!.prefix.whitespace)
+                        }
                         p.append("var")
                     }
 
@@ -214,7 +226,7 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
 
                     if (multiVariable.typeExpression != null && variable.getElement().initializer == null) {
                         p.append(":")
-                        visit(multiVariable.typeExpression, p)
+                        visit(multiVariable.typeExpression!!.withPrefix<TypeTree>(Space.EMPTY), p)
                         p.append("?") // make every declaration type nullable
                     }
 
@@ -276,11 +288,27 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                 return method
             }
 
-            override fun visitLambdaParameters(parameters: J.Lambda.Parameters, p: PrintOutputCapture<OutputCaptureContext>): J {
+            override fun visitLambdaParameters(
+                parameters: J.Lambda.Parameters,
+                p: PrintOutputCapture<OutputCaptureContext>
+            ): J {
                 p.context.isInLambdaParameters = true
                 val visitLambdaParameters = super.visitLambdaParameters(parameters, p)
                 p.context.isInLambdaParameters = false
                 return visitLambdaParameters
+            }
+
+            override fun visitTypeCast(typeCast: J.TypeCast, p: PrintOutputCapture<OutputCaptureContext>): J {
+                var tc = typeCast
+                if (tc.clazz.prefix == Space.EMPTY) {
+                    tc = tc.withClazz(tc.clazz.withPrefix(SINGLE_SPACE))
+                }
+                if (tc.clazz.tree.prefix == Space.EMPTY) {
+                    tc = tc.withClazz(tc.clazz.withTree(tc.clazz.tree.withPrefix(SINGLE_SPACE)))
+                }
+                val j = super.visitTypeCast(tc, p)
+                p.append("?") // make every cast type nullable
+                return j;
             }
 
             private fun visitArgumentsContainer(

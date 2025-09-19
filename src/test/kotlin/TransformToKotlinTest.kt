@@ -201,7 +201,7 @@ internal class TransformToKotlinTest : RewriteTest {
             class A {
                 @Deprecated
                 String a;
-
+            
                 @Deprecated
                 void b() {
                 }
@@ -210,9 +210,10 @@ internal class TransformToKotlinTest : RewriteTest {
             """
             @Deprecated
             class A {
+            
                 @Deprecated
-                private var a: String?
-
+                var a: String?
+            
                 @Deprecated
                 fun b() {
                 }
@@ -233,8 +234,8 @@ internal class TransformToKotlinTest : RewriteTest {
             """.trimIndent(),
             """
             class A {
-                fun b(o: Any?) {
-                    val s = o as String?
+                fun b(o: Object?) {
+                    var s = o as String?
                 }
             }
             """.trimIndent()
@@ -282,7 +283,6 @@ internal class TransformToKotlinTest : RewriteTest {
                 void b() {
                     int i = 0;
                     while (i < 10) {
-                        System.out.println(i);
                         i++;
                     }
                 }
@@ -293,7 +293,6 @@ internal class TransformToKotlinTest : RewriteTest {
                 fun b() {
                     var i = 0
                     while (i < 10) {
-                        System.out.println(i)
                         i++
                     }
                 }
