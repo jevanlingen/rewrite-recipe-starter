@@ -5,6 +5,7 @@ import org.openrewrite.*
 import org.openrewrite.Tree.randomId
 import org.openrewrite.java.marker.ImplicitReturn
 import org.openrewrite.java.tree.*
+import org.openrewrite.java.tree.Flag.Static
 import org.openrewrite.java.tree.J.Modifier.Type.LanguageExtension
 import org.openrewrite.java.tree.JContainer.Location.TYPE_PARAMETERS
 import org.openrewrite.java.tree.JRightPadded.Location.METHOD_INVOCATION_ARGUMENT
@@ -21,13 +22,6 @@ import org.openrewrite.kotlin.marker.SingleExpressionBlock
 import org.openrewrite.kotlin.tree.K
 import org.openrewrite.marker.Marker
 import org.openrewrite.marker.Markers.EMPTY
-import kotlin.collections.first
-import kotlin.collections.forEach
-import kotlin.collections.indices
-import kotlin.collections.plus
-import kotlin.jvm.java
-import kotlin.jvm.javaClass
-import kotlin.let
 
 class TransformToKotlin : ScanningRecipe<Accumulator>() {
     override fun getDisplayName() = "Java to Kotlin transformer"
@@ -252,16 +246,10 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
 
                 visitRightPadded(method.padding.select, METHOD_SELECT, p)
                 if (method.select != null) {
-                    println("----")
-                    println(method.select)
-                    println(method.select.javaClass)
-                    println(method.select.type)
-                    println(method.select.type.javaClass)
-                    println(method.select.type is JavaType.Class)
-                    // In Java, the return type will always be: `T | null`, so to be sure, use the null safe operator if method call is not static
-                    //if (method.select.type !is JavaType.Class) {
+                    // In Java, the return type will always be: `T | null` for non-static method, so to be sure, use the null safe operator if method call is not static
+                    if (method.methodType?.hasFlags(Static) != true) {
                         p.append("?")
-                    //}
+                    }
                     p.append(".")
                 }
 
