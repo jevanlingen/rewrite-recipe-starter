@@ -91,8 +91,11 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
             }
 
             override fun visitMethodDeclaration(m: J.MethodDeclaration, p: PrintOutputCapture<OutputCaptureContext>): J {
-                val funKeyword = J.Modifier(randomId(), SINGLE_SPACE, EMPTY, "fun", LanguageExtension, emptyList())
-                val method = m.withModifiers(m.modifiers + funKeyword)
+                val modifiers = m.modifiers
+                if (!m.isConstructor) {
+                    modifiers += J.Modifier(randomId(), SINGLE_SPACE, EMPTY, "fun", LanguageExtension, emptyList())
+                }
+                val method = m.withModifiers(modifiers)
                 val isSingleExpressionFunction = method.body?.statements?.size == 1
 
                 beforeSyntax(method, METHOD_DECLARATION_PREFIX, p)
@@ -105,7 +108,7 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                     visitMarkers(it.markers, p)
                     p.append("<")
                     visitRightPadded(
-                        it.padding.getTypeParameters(),
+                        it.padding.typeParameters,
                         JRightPadded.Location.TYPE_PARAMETER,
                         ",",
                         p
@@ -114,7 +117,7 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                 }
 
                 visit(method.annotations.name.annotations, p)
-                visit(method.name, p)
+                visit(if (m.isConstructor) method.name.withSimpleName("constructor") else method.name, p)
 
                 val params = method.padding.parameters
                 beforeSyntax(

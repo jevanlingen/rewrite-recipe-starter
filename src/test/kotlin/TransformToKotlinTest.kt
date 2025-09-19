@@ -1,9 +1,7 @@
-package com.jevanlingen
-
+import com.jevanlingen.TransformToKotlin
 import org.assertj.core.api.Assertions
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Test
-import org.openrewrite.java.Assertions.java
 import org.openrewrite.test.RecipeSpec
 import org.openrewrite.test.RewriteTest
 
@@ -151,6 +149,24 @@ internal class TransformToKotlinTest : RewriteTest {
         )
     }
 
+    @Test
+    fun `constructor`() {
+        rewriteRunJavaToKotlin(
+            """
+              class A {
+                  A() {
+                  }
+              }
+              """.trimIndent(),
+            """
+              class A {
+                  constructor() {
+                  }
+              }
+              """.trimIndent(),
+        )
+    }
+
     private fun rewriteRunJavaToKotlin(@Language("java") before: String, @Language("kotlin") after: String) {
         rewriteRun(
             { spec ->
@@ -158,7 +174,7 @@ internal class TransformToKotlinTest : RewriteTest {
                     Assertions.assertThat(it.changeset.allResults.first().after!!.printAll()).isEqualTo(after)
                 }
             },
-            java(before, null as String?)
+            org.openrewrite.java.Assertions.java(before, null as String?)
         )
     }
 }
