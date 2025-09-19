@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
     id("org.openrewrite.build.recipe-library-base") version "latest.release"
 
@@ -10,6 +12,7 @@ plugins {
     // If you are operating in an environment where public repositories are not accessible, we recommend using a
     // virtual repository which mirrors both maven central and nexus snapshots.
     id("org.openrewrite.build.recipe-repositories") version "latest.release"
+    kotlin("jvm") version "1.9.25"
 }
 
 // Set as appropriate for your organization
@@ -22,6 +25,7 @@ dependencies {
     implementation(platform("org.openrewrite.recipe:rewrite-recipe-bom:latest.release"))
 
     implementation("org.openrewrite:rewrite-java")
+    implementation("org.openrewrite:rewrite-kotlin")
     implementation("org.openrewrite.recipe:rewrite-java-dependencies")
     implementation("org.openrewrite:rewrite-yaml")
     implementation("org.openrewrite:rewrite-xml")
@@ -70,6 +74,16 @@ configure<PublishingExtension> {
             suppressPomMetadataWarningsFor("runtimeElements")
         }
     }
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+tasks.withType<KotlinCompile>().configureEach {
+    kotlinOptions.jvmTarget = if (name.contains("Test")) "21" else "1.8"
 }
 
 tasks.register("licenseFormat") {
