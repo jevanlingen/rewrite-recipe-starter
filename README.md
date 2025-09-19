@@ -48,13 +48,6 @@ To do this on the command line, using `gradle`, run:
 ```bash
 ./gradlew publishToMavenLocal
 # or ./gradlew pTML
-# or mvn install
-```
-
-To publish using maven, run:
-
-```bash
-./mvnw install
 ```
 
 This will publish to your local maven repository, typically under `~/.m2/repository`.
@@ -112,7 +105,7 @@ rewrite {
 }
 ```
 
-Now you can run `mvn rewrite:run` or `gradlew rewriteRun` to run your recipe.
+Now you can run `gradlew rewriteRun` to run your recipe.
 
 ## Publishing to Artifact Repositories
 
@@ -149,8 +142,4 @@ You can apply these recommendations to your recipes by running the following com
 
 ```bash
 ./gradlew --init-script init.gradle rewriteRun -Drewrite.activeRecipe=org.openrewrite.recipes.rewrite.OpenRewriteRecipeBestPractices
-```
-or
-```bash
-./mvnw -U org.openrewrite.maven:rewrite-maven-plugin:run -Drewrite.recipeArtifactCoordinates=org.openrewrite.recipe:rewrite-rewrite:RELEASE -Drewrite.activeRecipes=org.openrewrite.recipes.rewrite.OpenRewriteRecipeBestPractices
 ```
