@@ -435,7 +435,7 @@ internal class TransformToKotlinTest : RewriteTest {
         )
     }
 
-    // TODO SUPPORT THESE CASES BELOW
+    // TODO SUPPORT THIS CASE
     @Test
     fun `static members`() {
         rewriteRunJavaToKotlin(
@@ -474,6 +474,7 @@ internal class TransformToKotlinTest : RewriteTest {
         )
     }
 
+    // TODO SUPPORT THIS CASE
     @Test
     fun `constructor with properties`() {
         rewriteRunJavaToKotlin(

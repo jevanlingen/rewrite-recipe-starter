@@ -6,6 +6,7 @@ import org.openrewrite.Tree.randomId
 import org.openrewrite.java.marker.ImplicitReturn
 import org.openrewrite.java.tree.*
 import org.openrewrite.java.tree.Flag.Static
+import org.openrewrite.java.tree.J
 import org.openrewrite.java.tree.J.Modifier.Type.LanguageExtension
 import org.openrewrite.java.tree.JContainer.Location.TYPE_PARAMETERS
 import org.openrewrite.java.tree.JRightPadded.Location.METHOD_INVOCATION_ARGUMENT
@@ -74,6 +75,16 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
 
         class ExtendedKotlinJavaPrinter(kp: KotlinPrinter<OutputCaptureContext>) :
             KotlinJavaPrinter<OutputCaptureContext>(kp) {
+            override fun visitClassDeclaration(
+                classDecl: J.ClassDeclaration,
+                p: PrintOutputCapture<OutputCaptureContext>
+            ): J {
+                val modifiers = classDecl.modifiers.toMutableList()
+                if (classDecl.kind == J.ClassDeclaration.Kind.Type.Enum) {
+                    modifiers += J.Modifier(randomId(), Space.EMPTY, EMPTY, "enum ", LanguageExtension, emptyList())
+                }
+                return super.visitClassDeclaration(classDecl.withModifiers(modifiers), p)
+            }
 
             override fun visitBlock(block: J.Block, p: PrintOutputCapture<OutputCaptureContext>): J {
                 if (p.context.isInMethodBodyDeclarationsSingleExpressionFunction == block) {
