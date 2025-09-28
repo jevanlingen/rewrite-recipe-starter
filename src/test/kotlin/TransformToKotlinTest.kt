@@ -381,9 +381,34 @@ internal class TransformToKotlinTest : RewriteTest {
         )
     }
 
-    // TODO SUPPORT THESE CASES BELOW
     @Test
     fun `for loop`() {
+        rewriteRunJavaToKotlin(
+            """
+            class A {
+                void b() {
+                    for (int i = 1; i < 5; i++) {
+                        System.out.println(i);
+                    }
+                }
+            }
+            """.trimIndent(),
+            """
+            class A {
+                fun b() {
+                    var i = 1
+                    while (i < 5) {
+                        System.out?.println(i)
+                        i++
+                    }
+                }
+            }
+            """.trimIndent()
+        )
+    }
+
+    @Test
+    fun `enhanced for loop`() {
         rewriteRunJavaToKotlin(
             """
             import java.util.List;
@@ -401,8 +426,8 @@ internal class TransformToKotlinTest : RewriteTest {
 
             class A {
                 fun b(list: List<String>?) {
-                    for (s in list) {
-                        System.out.println(s)
+                    for (s in list!!) {
+                        System.out?.println(s)
                     }
                 }
             }
@@ -410,6 +435,7 @@ internal class TransformToKotlinTest : RewriteTest {
         )
     }
 
+    // TODO SUPPORT THESE CASES BELOW
     @Test
     fun `static members`() {
         rewriteRunJavaToKotlin(

@@ -79,7 +79,7 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                     var statement = block.statements.first()
                     if (statement is J.Return) {
                         statement = statement.withMarkers(statement.markers.add(ImplicitReturn(randomId())))
-                    } else if (statement is J.VariableDeclarations || statement is J.Switch) {
+                    } else if (statement is J.VariableDeclarations || statement is J.Switch || statement is J.ForLoop || statement is J.ForEachLoop || statement is J.WhileLoop) {
                         // exception when we can't turn it into a single expression function after all
                         return super.visitBlock(block, p)
                     }
@@ -209,7 +209,7 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                 for (i in variables.indices) {
                     val variable = variables.get(i)
 
-                    if (!isFinal && !p.context.isInMethodDeclarationsArguments && !p.context.isInLambdaParameters) {
+                    if (!isFinal && !p.context.isInMethodDeclarationsArguments && !p.context.isInForEach && !p.context.isInLambdaParameters) {
                         if (multiVariable.typeExpression != null) {
                             p.append(multiVariable.typeExpression!!.prefix.whitespace)
                         }
@@ -224,7 +224,7 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                     visit(variable.getElement().getName(), p)
                     visitSpace(variable.after, VARIABLE_INITIALIZER, p)
 
-                    if (multiVariable.typeExpression != null && variable.getElement().initializer == null) {
+                    if (multiVariable.typeExpression != null && !p.context.isInForEach && variable.getElement().initializer == null) {
                         p.append(":")
                         visit(multiVariable.typeExpression!!.withPrefix<TypeTree>(Space.EMPTY), p)
                         if (variable.element.type !is JavaType.Primitive) {
@@ -358,6 +358,44 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                 return case_
             }
 
+            override fun visitForLoop(forLoop: J.ForLoop, p: PrintOutputCapture<OutputCaptureContext>): J {
+                val ctrl = forLoop.control
+                val body = forLoop.getPadding().body
+                val bodyElement = body.element
+                if (bodyElement !is J.Block) {
+                    throw IllegalArgumentException("Cannot convert $ctrl yet!")
+                }
+
+                beforeSyntax(forLoop, FOR_PREFIX, p)
+                visitRightPadded(ctrl.getPadding().init, JRightPadded.Location.FOR_INIT, "", p)
+                p.append("\nwhile")
+                p.append('(')
+                visitRightPadded(ctrl.getPadding().condition, JRightPadded.Location.FOR_CONDITION, "", p)
+                p.append(')')
+                val ctrlUpdate = ctrl.getPadding().update.map<JRightPadded<Statement>, Statement> { it.element.withPrefix(Space.build("\n", emptyList())) }
+                visitStatement(
+                    body.withElement(bodyElement.withStatements(bodyElement.statements + ctrlUpdate)),
+                    JRightPadded.Location.FOR_BODY, p)
+                afterSyntax(forLoop, p)
+                return forLoop
+            }
+
+            override fun visitForEachLoop(forEachLoop: J.ForEachLoop, p: PrintOutputCapture<OutputCaptureContext>): J {
+                p.context.isInForEach = true
+                beforeSyntax(forEachLoop, FOR_EACH_LOOP_PREFIX, p)
+                p.append("for")
+                val ctrl = forEachLoop.control
+                visitSpace(ctrl.prefix, FOR_EACH_CONTROL_PREFIX, p)
+                p.append('(')
+                visitRightPadded(ctrl.getPadding().variable, JRightPadded.Location.FOREACH_VARIABLE, "in", p)
+                visitRightPadded(ctrl.getPadding().iterable, JRightPadded.Location.FOREACH_ITERABLE, "!!", p)
+                p.append(')')
+                visitStatement(forEachLoop.getPadding().body, JRightPadded.Location.FOR_BODY, p)
+                afterSyntax(forEachLoop, p)
+                p.context.isInForEach = false
+                return forEachLoop
+            }
+
             private fun visitArgumentsContainer(
                 argContainer: JContainer<Expression>,
                 argsLocation: Space.Location,
@@ -380,6 +418,7 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
 
 data class OutputCaptureContext(
     var isInMethodDeclarationsArguments: Boolean = false,
+    var isInForEach: Boolean = false,
     var isInMethodBodyDeclarationsSingleExpressionFunction: Any? = null,
     var isInLambdaParameters: Boolean = false,
 )
