@@ -314,9 +314,11 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
             }
 
             override fun visitSwitch(switch_: J.Switch, p: PrintOutputCapture<OutputCaptureContext>): J {
+                p.context.isInSwitch = true
                 p.append("\n/* Switch statements don't translate directly to Kotlin’s `when` expression. Handle these cases manually to ensure correct fallthrough behavior.")
                 val s = super.visitSwitch(switch_, p)
                 p.append("*/")
+                p.context.isInSwitch = false
                 return s;
             }
 
@@ -330,6 +332,10 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
             }
 
             override fun visitCase(case_: J.Case, p: PrintOutputCapture<OutputCaptureContext>): J {
+                if (p.context.isInSwitch) {
+                    return super.visitCase(case_, p)
+                }
+
                 beforeSyntax(case_, CASE_PREFIX, p)
                 var c = case_
                 val elem = case_.caseLabels.first()
@@ -419,6 +425,7 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
 data class OutputCaptureContext(
     var isInMethodDeclarationsArguments: Boolean = false,
     var isInForEach: Boolean = false,
+    var isInSwitch: Boolean = false,
     var isInMethodBodyDeclarationsSingleExpressionFunction: Any? = null,
     var isInLambdaParameters: Boolean = false,
 )

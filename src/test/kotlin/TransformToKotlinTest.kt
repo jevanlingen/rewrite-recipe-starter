@@ -243,7 +243,7 @@ internal class TransformToKotlinTest : RewriteTest {
     }
 
     @Test
-    fun `switch`() {
+    fun switch() {
         rewriteRunJavaToKotlin(
             """
             class A {
