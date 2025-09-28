@@ -48,11 +48,11 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
             JavaAsKotlinPrinter().visit(cu, printOutputCapture)
             kotlinSources.add(
                 KotlinParser.builder().build()
-                .parse(printOutputCapture.getOut())
-                .map { AutoFormatVisitorForWholeFile<ExecutionContext>().visitNonNull(it, ctx) }
-                .map { it.cast<K.CompilationUnit>() }
-                .findFirst()
-                .get())
+                    .parse(printOutputCapture.getOut())
+                    .map { AutoFormatVisitorForWholeFile<ExecutionContext>().visitNonNull(it, ctx) }
+                    .map { it.cast<K.CompilationUnit>() }
+                    .findFirst()
+                    .get())
         }
 
         return kotlinSources
@@ -74,6 +74,7 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
 
         class ExtendedKotlinJavaPrinter(kp: KotlinPrinter<OutputCaptureContext>) :
             KotlinJavaPrinter<OutputCaptureContext>(kp) {
+
             override fun visitBlock(block: J.Block, p: PrintOutputCapture<OutputCaptureContext>): J {
                 if (p.context.isInMethodBodyDeclarationsSingleExpressionFunction == block) {
                     var statement = block.statements.first()
@@ -165,7 +166,8 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                     }
                 }
 
-                p.context.isInMethodBodyDeclarationsSingleExpressionFunction = if (isSingleExpressionFunction) method.body else null
+                p.context.isInMethodBodyDeclarationsSingleExpressionFunction =
+                    if (isSingleExpressionFunction) method.body else null
                 visit(method.body, p)
                 p.context.isInMethodBodyDeclarationsSingleExpressionFunction = null
                 afterSyntax(method, p)
@@ -322,7 +324,10 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                 return s;
             }
 
-            override fun visitSwitchExpression(switch_: J.SwitchExpression, p: PrintOutputCapture<OutputCaptureContext>): J {
+            override fun visitSwitchExpression(
+                switch_: J.SwitchExpression,
+                p: PrintOutputCapture<OutputCaptureContext>
+            ): J {
                 beforeSyntax(switch_, SWITCH_EXPRESSION_PREFIX, p);
                 p.append("when");
                 visit(switch_.selector, p);
@@ -378,10 +383,18 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                 p.append('(')
                 visitRightPadded(ctrl.getPadding().condition, JRightPadded.Location.FOR_CONDITION, "", p)
                 p.append(')')
-                val ctrlUpdate = ctrl.getPadding().update.map<JRightPadded<Statement>, Statement> { it.element.withPrefix(Space.build("\n", emptyList())) }
+                val ctrlUpdate = ctrl.getPadding().update.map<JRightPadded<Statement>, Statement> {
+                    it.element.withPrefix(
+                        Space.build(
+                            "\n",
+                            emptyList()
+                        )
+                    )
+                }
                 visitStatement(
                     body.withElement(bodyElement.withStatements(bodyElement.statements + ctrlUpdate)),
-                    JRightPadded.Location.FOR_BODY, p)
+                    JRightPadded.Location.FOR_BODY, p
+                )
                 afterSyntax(forLoop, p)
                 return forLoop
             }
