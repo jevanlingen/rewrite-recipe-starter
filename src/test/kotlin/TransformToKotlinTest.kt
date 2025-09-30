@@ -151,17 +151,29 @@ internal class TransformToKotlinTest : RewriteTest {
 
     @Test
     fun `constructor`() {
+        // TODO: convert to primary constructor can possible be done at a later stage...
         rewriteRunJavaToKotlin(
             """
               class A {
-                  A() {
+                  private final String prop;
+                  A(String prop) {
+                      this.prop = prop;
+                  }
+              
+                  public String getProp() {
+                      return prop;
                   }
               }
               """.trimIndent(),
             """
               class A {
-                  constructor() {
+                  private val prop: String?
+                  constructor(prop: String?) {
+                      this.prop = prop
                   }
+              
+                  fun getProp() =
+                      prop
               }
               """.trimIndent(),
         )
@@ -471,25 +483,6 @@ internal class TransformToKotlinTest : RewriteTest {
                 B, C
             }
             """.trimIndent()
-        )
-    }
-
-    // TODO SUPPORT THIS CASE
-    @Test
-    fun `constructor with properties`() {
-        rewriteRunJavaToKotlin(
-            """
-              class A {
-                  private final String prop;
-                  A(String prop) {
-                      this.prop = prop;
-                  }
-              }
-              """.trimIndent(),
-            """
-              class A(private val prop: String?) {
-              }
-              """.trimIndent(),
         )
     }
 

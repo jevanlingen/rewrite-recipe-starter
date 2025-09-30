@@ -91,7 +91,12 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                     var statement = block.statements.first()
                     if (statement is J.Return) {
                         statement = statement.withMarkers(statement.markers.add(ImplicitReturn(randomId())))
-                    } else if (statement is J.VariableDeclarations || statement is J.Switch || statement is J.ForLoop || statement is J.ForEachLoop || statement is J.WhileLoop) {
+                    } else if (statement is J.VariableDeclarations ||
+                        statement is J.Switch ||
+                        statement is J.ForLoop ||
+                        statement is J.ForEachLoop ||
+                        statement is J.WhileLoop ||
+                        statement is J.Assignment) {
                         // exception when we can't turn it into a single expression function after all
                         return super.visitBlock(block, p)
                     }
