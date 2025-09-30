@@ -47,9 +47,23 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
         acc.javaSources.forEach { cu ->
             val printOutputCapture = PrintOutputCapture(OutputCaptureContext())
             JavaAsKotlinPrinter().visit(cu, printOutputCapture)
+            var kotlinString = printOutputCapture.getOut()
+
+            val staticRegex = Regex("\\s*// STATIC_START\\n(.*?)\\n// STATIC_END\\n", RegexOption.DOT_MATCHES_ALL)
+            val staticMembers = staticRegex.findAll(kotlinString).map { it.groupValues[1] }.toList()
+            if (staticMembers.isNotEmpty()) {
+                kotlinString = staticRegex.replace(kotlinString, "").replace(Regex("\n\\s*\n"), "\n")
+                val lastBrace = kotlinString.lastIndexOf('}')
+                if (lastBrace != -1) {
+                    val staticContent = staticMembers.joinToString("\n\n") { it.trim() }
+                    val companionObject = "\ncompanion object {$staticContent}\n"
+                    kotlinString = kotlinString.substring(0, lastBrace) + companionObject + kotlinString.substring(lastBrace)
+                }
+            }
+
             kotlinSources.add(
                 KotlinParser.builder().build()
-                    .parse(printOutputCapture.getOut())
+                    .parse(kotlinString)
                     .map { AutoFormatVisitorForWholeFile<ExecutionContext>().visitNonNull(it, ctx) }
                     .map { it.cast<K.CompilationUnit>() }
                     .findFirst()
@@ -113,6 +127,11 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                 m: J.MethodDeclaration,
                 p: PrintOutputCapture<OutputCaptureContext>
             ): J {
+                val isStatic = m.hasModifier(J.Modifier.Type.Static)
+                if (isStatic) {
+                    p.append("// STATIC_START\n")
+                }
+
                 val modifiers = m.modifiers.toMutableList()
                 if (!m.isConstructor) {
                     modifiers += J.Modifier(randomId(), SINGLE_SPACE, EMPTY, "fun", LanguageExtension, emptyList())
@@ -187,11 +206,16 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                 visit(method.body, p)
                 p.context.isInMethodBodyDeclarationsSingleExpressionFunction = null
                 afterSyntax(method, p)
+
+                if (isStatic) {
+                    p.append("\n// STATIC_END\n")
+                }
+
                 return method
             }
 
             override fun visitModifier(mod: J.Modifier, p: PrintOutputCapture<OutputCaptureContext>): J? {
-                if (mod.type == J.Modifier.Type.Public) {
+                if (mod.type == J.Modifier.Type.Public || mod.type == J.Modifier.Type.Static) {
                     return null
                 }
                 return super.visitModifier(mod, p)
@@ -209,6 +233,11 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                 multiVariable: J.VariableDeclarations,
                 p: PrintOutputCapture<OutputCaptureContext>
             ): J {
+                val isStatic = multiVariable.hasModifier(J.Modifier.Type.Static)
+                if (isStatic) {
+                    p.append("// STATIC_START\n")
+                }
+
                 beforeSyntax(multiVariable, VARIABLE_DECLARATIONS_PREFIX, p)
 
                 visit(multiVariable.leadingAnnotations, p)
@@ -248,6 +277,9 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                         if (variable.element.type !is JavaType.Primitive) {
                             p.append("?") // make every declaration type nullable
                         }
+                        if (isStatic) {
+                            p.append(" = null")
+                        }
                     }
 
                     variable.getElement().padding.initializer?.let {
@@ -270,6 +302,10 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                 }
 
                 afterSyntax(multiVariable, p)
+
+                if (isStatic) {
+                    p.append("\n// STATIC_END\n")
+                }
                 return multiVariable
             }
 

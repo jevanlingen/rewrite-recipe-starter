@@ -447,21 +447,29 @@ internal class TransformToKotlinTest : RewriteTest {
         )
     }
 
-    // TODO SUPPORT THIS CASE
     @Test
     fun `static members`() {
+        // TODO inner classes with static members are not yet supported
         rewriteRunJavaToKotlin(
             """
             class A {
                 static String b;
+                
+                void nonStatic() {
+                }
+                
                 static void c() {
                 }
             }
             """.trimIndent(),
             """
             class A {
+                fun nonStatic() {
+                }
+            
                 companion object {
-                    var b: String?
+                    var b: String? = null
+            
                     fun c() {
                     }
                 }
