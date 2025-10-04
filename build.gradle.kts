@@ -31,7 +31,7 @@ dependencies {
     implementation("org.openrewrite:rewrite-xml")
     implementation("org.openrewrite:rewrite-maven")
     implementation("org.openrewrite:rewrite-gradle")
-    implementation("org.openrewrite.meta:rewrite-analysis")
+    implementation("org.openrewrite.recipe:rewrite-static-analysis")
     implementation("org.assertj:assertj-core:latest.release")
     runtimeOnly("org.openrewrite:rewrite-java-17")
 
@@ -49,6 +49,8 @@ dependencies {
     testImplementation("org.openrewrite:rewrite-test") {
         exclude(group = "org.slf4j", module = "slf4j-nop")
     }
+    testRuntimeOnly(gradleApi())
+    testImplementation("org.openrewrite.gradle.tooling:model")
 
     // Need to have a slf4j binding to see any output enabled from the parser.
     runtimeOnly("ch.qos.logback:logback-classic:1.2.+")

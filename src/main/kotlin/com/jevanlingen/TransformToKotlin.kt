@@ -61,13 +61,17 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                 }
             }
 
-            kotlinSources.add(
-                KotlinParser.builder().build()
-                    .parse(kotlinString)
-                    .map { AutoFormatVisitorForWholeFile<ExecutionContext>().visitNonNull(it, ctx) }
-                    .map { it.cast<K.CompilationUnit>() }
-                    .findFirst()
-                    .get())
+            try {
+                kotlinSources.add(
+                    KotlinParser.builder().build()
+                        .parse(kotlinString)
+                        .map { AutoFormatVisitorForWholeFile<ExecutionContext>().visitNonNull(it, ctx) }
+                        .map { it.cast<K.CompilationUnit>() }
+                        .findFirst()
+                        .get())
+            } catch (e: Exception) {
+                System.err.println(e.message)
+            }
         }
 
         return kotlinSources

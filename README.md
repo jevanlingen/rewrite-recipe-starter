@@ -19,9 +19,15 @@ To do this on the command line, using `gradle`, run:
 
 This will publish to your local maven repository, typically under `~/.m2/repository`.
 
-Replace the groupId, artifactId, recipe name, and version in the below snippets with the ones that correspond to your recipe.
+In the pom.xml of a different project you wish to test your recipe out in, run:
 
-In the pom.xml of a different project you wish to test your recipe out in, make your recipe module a plugin dependency of rewrite-maven-plugin:
+```bash
+mvn -U org.openrewrite.maven:rewrite-maven-plugin:run \
+  -Drewrite.recipeArtifactCoordinates=com.jevanlingen:rewrite-recipe-starter:LATEST \
+  -Drewrite.activeRecipes=com.jevanlingen.MigrateJavaToKotlin
+```
+
+or make your recipe module a plugin dependency of rewrite-maven-plugin:
 
 ```xml
 <project>
