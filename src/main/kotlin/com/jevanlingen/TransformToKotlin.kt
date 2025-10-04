@@ -23,6 +23,7 @@ import org.openrewrite.kotlin.marker.SingleExpressionBlock
 import org.openrewrite.kotlin.tree.K
 import org.openrewrite.marker.Marker
 import org.openrewrite.marker.Markers.EMPTY
+import kotlin.io.path.Path
 
 class TransformToKotlin : ScanningRecipe<Accumulator>() {
     override fun getDisplayName() = "Java to Kotlin transformer"
@@ -66,9 +67,16 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                     KotlinParser.builder().build()
                         .parse(kotlinString)
                         .map { AutoFormatVisitorForWholeFile<ExecutionContext>().visitNonNull(it, ctx) }
-                        .map { it.cast<K.CompilationUnit>() }
+                        .map<K.CompilationUnit> { it.cast() }
                         .findFirst()
-                        .get())
+                        .get()
+                        .withSourcePath(
+                            Path(
+                                cu.sourcePath.toString()
+                                    .replace(".java", ".kt", true)
+                                    .replace("java", "kotlin", true)
+                            )
+                        ))
             } catch (e: Exception) {
                 System.err.println(e.message)
             }
@@ -114,7 +122,8 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                         statement is J.ForLoop ||
                         statement is J.ForEachLoop ||
                         statement is J.WhileLoop ||
-                        statement is J.Assignment) {
+                        statement is J.Assignment
+                    ) {
                         // exception when we can't turn it into a single expression function after all
                         return super.visitBlock(block, p)
                     }
