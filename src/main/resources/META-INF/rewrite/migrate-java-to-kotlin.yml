@@ -41,7 +41,7 @@ recipeList:
                 </goals>
             </execution>
         </executions>
-  # TODO: Add <sourceDirectory>${project.basedir}/src/main/kotlin</sourceDirectory> and <testSourceDirectory>${project.basedir}/src/test/kotlin</testSourceDirectory> for maven
+  - com.jevanlingen.maven.AddKotlinSourceFolders
   - org.openrewrite.gradle.plugins.AddBuildPlugin:
       pluginId: org.jetbrains.kotlin.jvm
       version: 1.9.25
