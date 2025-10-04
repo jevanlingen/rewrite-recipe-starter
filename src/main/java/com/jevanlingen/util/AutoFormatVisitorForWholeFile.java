@@ -17,17 +17,17 @@ package com.jevanlingen.util;
 
 
 import org.jspecify.annotations.Nullable;
-import org.openrewrite.SourceFile;
 import org.openrewrite.Tree;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.JavaSourceFile;
 import org.openrewrite.kotlin.format.*;
 import org.openrewrite.kotlin.style.*;
-
-import java.util.Optional;
+import org.openrewrite.style.Style;
 
 import static java.util.Objects.requireNonNull;
 
+// THIS FORMATTER ONLY REMOVES THE `J.CompilationUnit` CHECK, AS WE WANT TO UPDATE WHOLE KOTLIN FILES
+// DON'T ALTER ANYTHING ELSE, BUT ADD A <PR> TO THE OpenRewrite PROJECT IF YOU WANT DIFFENT STYLING
 public class AutoFormatVisitorForWholeFile<P> extends AutoFormatVisitor<P> {
     @Nullable
     private final Tree stopAfter;
@@ -38,6 +38,7 @@ public class AutoFormatVisitorForWholeFile<P> extends AutoFormatVisitor<P> {
     }
 
     public AutoFormatVisitorForWholeFile(@Nullable Tree stopAfter) {
+        super(stopAfter);
         this.stopAfter = stopAfter;
     }
 
@@ -45,36 +46,30 @@ public class AutoFormatVisitorForWholeFile<P> extends AutoFormatVisitor<P> {
     public J visit(@Nullable Tree tree, P p) {
         if (tree instanceof JavaSourceFile) {
             JavaSourceFile cu = (JavaSourceFile) requireNonNull(tree);
+            // Avoid reformatting entire Groovy source files, or other J-derived ASTs
+            // Java AutoFormat does OK for a snippet of Groovy, But whole-file reformatting is inadvisable and there is
+            // currently no easy way to customize or fine-tune for Groovy
+            // if (!(cu instanceof J.CompilationUnit)) {
+            //    return cu;
+            // }
 
             JavaSourceFile t = (JavaSourceFile) new RemoveTrailingWhitespaceVisitor<>(stopAfter).visit(cu, p);
-
-            t = (JavaSourceFile) new BlankLinesVisitor<>(Optional.ofNullable(cu.getStyle(BlankLinesStyle.class))
-                    .orElse(IntelliJ.blankLines()), stopAfter)
+            t = (JavaSourceFile) new BlankLinesVisitor<>(Style.from(BlankLinesStyle.class, cu, IntelliJ::blankLines), stopAfter)
                     .visit(t, p);
-
-            t = (JavaSourceFile) new SpacesVisitor<P>(Optional.ofNullable(
-                    cu.getStyle(SpacesStyle.class)).orElse(IntelliJ.spaces()),
+            t = (JavaSourceFile) new SpacesVisitor<P>(Style.from(SpacesStyle.class, cu, IntelliJ::spaces),
                     stopAfter)
                     .visit(t, p);
-
-            t = (JavaSourceFile) new WrappingAndBracesVisitor<>(Optional.ofNullable(cu.getStyle(WrappingAndBracesStyle.class))
-                    .orElse(IntelliJ.wrappingAndBraces()), stopAfter)
+            t = (JavaSourceFile) new WrappingAndBracesVisitor<>(Style.from(WrappingAndBracesStyle.class, cu, IntelliJ::wrappingAndBraces), stopAfter)
                     .visit(t, p);
-
-            t = (JavaSourceFile) new NormalizeTabsOrSpacesVisitor<>(Optional.ofNullable(cu.getStyle(TabsAndIndentsStyle.class))
-                    .orElse(IntelliJ.tabsAndIndents()), stopAfter)
+            t = (JavaSourceFile) new NormalizeTabsOrSpacesVisitor<>(Style.from(TabsAndIndentsStyle.class, cu, IntelliJ::tabsAndIndents), stopAfter)
                     .visit(t, p);
-
             t = (JavaSourceFile) new TabsAndIndentsVisitor<>(
-                    Optional.ofNullable(cu.getStyle(TabsAndIndentsStyle.class)).orElse(IntelliJ.tabsAndIndents()),
-                    Optional.ofNullable(cu.getStyle(WrappingAndBracesStyle.class)).orElse(IntelliJ.wrappingAndBraces()),
+                    Style.from(TabsAndIndentsStyle.class, cu, IntelliJ::tabsAndIndents),
+                    Style.from(WrappingAndBracesStyle.class, cu, IntelliJ::wrappingAndBraces),
                     stopAfter
             ).visit(t, p);
 
-            t = (JavaSourceFile) new TrailingCommaVisitor<>(IntelliJ.other().getUseTrailingComma()).visit(t, p);
-
-            assert t != null;
-            return t;
+            return new TrailingCommaVisitor<>(IntelliJ.other().getUseTrailingComma()).visitNonNull(t, p);
         }
         return (J) tree;
     }
