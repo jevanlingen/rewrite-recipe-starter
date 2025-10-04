@@ -1,4 +1,5 @@
-import com.jevanlingen.TransformToKotlin
+package com.jevanlingen
+
 import org.assertj.core.api.Assertions
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Test

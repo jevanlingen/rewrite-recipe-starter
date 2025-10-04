@@ -13,7 +13,7 @@ class AddKotlinSourceFolders : Recipe() {
 
     override fun getVisitor(): MavenIsoVisitor<ExecutionContext> {
         return object : MavenIsoVisitor<ExecutionContext>() {
-            override fun visitDocument(document: Xml.Document, executionContext: ExecutionContext): Xml.Document {
+            override fun visitDocument(document: Xml.Document, ctx: ExecutionContext): Xml.Document {
                 document.root.getChild("build").ifPresent {
                     val sourceDirectory = it.getChild("sourceDirectory")
                     if (!sourceDirectory.isPresent) {
@@ -34,7 +34,7 @@ class AddKotlinSourceFolders : Recipe() {
                         )
                     }
                 }
-                return super.visitDocument(document, executionContext)
+                return super.visitDocument(document, ctx)
             }
         }
     }
