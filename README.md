@@ -33,7 +33,7 @@ In the pom.xml of a different project you wish to test your recipe out in, make 
                 <version>RELEASE</version>
                 <configuration>
                     <activeRecipes>
-                        <recipe>com.jevanlingen.NoGuavaListsNewArrayList</recipe>
+                        <recipe>com.jevanlingen.MigrateJavaToKotlin</recipe>
                     </activeRecipes>
                 </configuration>
                 <dependencies>
