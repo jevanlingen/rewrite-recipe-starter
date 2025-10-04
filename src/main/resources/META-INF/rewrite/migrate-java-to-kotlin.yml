@@ -45,7 +45,7 @@ recipeList:
   - org.openrewrite.gradle.plugins.AddBuildPlugin:
       pluginId: org.jetbrains.kotlin.jvm
       version: 1.9.25
-  # TODO: Add kotlin { jvmToolchain(21) } for Kotlin.    
+  - com.jevanlingen.gradle.AddKotlinJvmToolchain
   - org.openrewrite.java.dependencies.AddDependency:
       groupId: org.jetbrains.kotlin
       artifactId: kotlin-stdlib
