@@ -20,11 +20,51 @@ name: com.jevanlingen.MigrateJavaToKotlin
 displayName: Migrate Java to Kotlin
 description: Replaces Java files with Kotlin equivalent.
 recipeList:
+  - org.openrewrite.maven.AddPlugin:
+      groupId: org.jetbrains.kotlin
+      artifactId: kotlin-maven-plugin
+      version: 1.9.25
+      executions: |
+        <executions>
+            <execution>
+                <id>compile</id>
+                <phase>compile</phase>
+                <goals>
+                    <goal>compile</goal>
+                </goals>
+            </execution>
+            <execution>
+                <id>test-compile</id>
+                <phase>test-compile</phase>
+                <goals>
+                    <goal>test-compile</goal>
+                </goals>
+            </execution>
+        </executions>
+  # TODO: Add <sourceDirectory>${project.basedir}/src/main/kotlin</sourceDirectory> and <testSourceDirectory>${project.basedir}/src/test/kotlin</testSourceDirectory> for maven
+  - org.openrewrite.gradle.plugins.AddBuildPlugin:
+      pluginId: org.jetbrains.kotlin.jvm
+      version: 1.9.25
+  # TODO: Add kotlin { jvmToolchain(21) } for Kotlin.    
+  - org.openrewrite.java.dependencies.AddDependency:
+      groupId: org.jetbrains.kotlin
+      artifactId: kotlin-stdlib
+      version: 1.9.25
+  - org.openrewrite.java.dependencies.AddDependency:
+      groupId: org.jetbrains.kotlin
+      artifactId: kotlin-test
+      version: 1.9.25
+      scope: test
+  - org.openrewrite.java.dependencies.AddDependency:
+      groupId: org.jetbrains.kotlin
+      artifactId: kotlin-test-junit5
+      version: 1.9.25
+      scope: test
   - org.openrewrite.staticanalysis.FinalizeLocalVariables
-# TODO: This recipe could be used to fix the nullable stuff, but:
-#  - that recipe is not complete, so we cannot dependent on it until it's 100% perfect (otherwise we will create nullable compile errors)
-#  - The `com.jevanlingen.TransformToKotlin` recipe needs to be improved to benefit from it
-#  - org.openrewrite.staticanalysis.AnnotateNullableMethods
+  # TODO: This recipe could be used to fix the nullable stuff, but:
+  #  - that recipe is not complete, so we cannot dependent on it until it's 100% perfect (otherwise we will create nullable compile errors)
+  #  - The `com.jevanlingen.TransformToKotlin` recipe needs to be improved to benefit from it
+  #  - org.openrewrite.staticanalysis.AnnotateNullableMethods
   - com.jevanlingen.TransformToKotlin
   - org.openrewrite.kotlin.cleanup.RemoveLambdaArgumentParentheses
   - org.openrewrite.kotlin.cleanup.RemoveTrailingSemicolon
