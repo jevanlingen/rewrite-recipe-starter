@@ -92,10 +92,7 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
     override fun getVisitor(acc: Accumulator): TreeVisitor<*, ExecutionContext> {
         return object : TreeVisitor<Tree, ExecutionContext>() {
             override fun visit(tree: Tree?, ctx: ExecutionContext): Tree? {
-                if (tree is J.CompilationUnit && tree in acc.javaSources) {
-                    return null;
-                }
-                return tree
+                return if (tree is J.CompilationUnit && tree in acc.javaSources) null else tree
             }
         }
     }
