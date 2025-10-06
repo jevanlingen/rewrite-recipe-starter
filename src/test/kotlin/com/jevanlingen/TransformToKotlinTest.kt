@@ -38,6 +38,10 @@ internal class TransformToKotlinTest : RewriteTest {
                   var f = "x";
                   final var g = "x";
                   final String h = "x";
+                  
+                  void test() {
+                      String b;
+                  }
               }
               """.trimIndent(),
             """
@@ -45,13 +49,17 @@ internal class TransformToKotlinTest : RewriteTest {
               import java.util.List;
               
               class A {
-                  var a: String?
+                  var a: String? = null
                   var c = ArrayList<String>()
                   // List<String> d = new ArrayList<>();  <- no support for diamond operator yet
                   var e = "x"
                   var f = "x"
                   val g = "x"
                   val h = "x"
+              
+                  fun test() {
+                      var b: String?
+                  }
               }
               """.trimIndent()
         )
@@ -157,6 +165,8 @@ internal class TransformToKotlinTest : RewriteTest {
             """
               class A {
                   private final String prop;
+                  private String prop2; // no constructor prop
+              
                   A(String prop) {
                       this.prop = prop;
                   }
@@ -169,6 +179,8 @@ internal class TransformToKotlinTest : RewriteTest {
             """
               class A {
                   private val prop: String?
+                  private var prop2: String? = null // no constructor prop
+              
                   constructor(prop: String?) {
                       this.prop = prop
                   }
@@ -197,7 +209,7 @@ internal class TransformToKotlinTest : RewriteTest {
             import java.util.List;
 
             class A<T> {
-                private var list: List<T>?
+                private var list: List<T>? = null
 
                 fun <U> b(u: U?) {
                 }
@@ -225,7 +237,7 @@ internal class TransformToKotlinTest : RewriteTest {
             class A {
             
                 @Deprecated
-                var a: String?
+                var a: String? = null
             
                 @Deprecated
                 fun b() {

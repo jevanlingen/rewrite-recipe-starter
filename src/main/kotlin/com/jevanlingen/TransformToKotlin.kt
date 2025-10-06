@@ -6,7 +6,6 @@ import org.openrewrite.Tree.randomId
 import org.openrewrite.java.marker.ImplicitReturn
 import org.openrewrite.java.tree.*
 import org.openrewrite.java.tree.Flag.Static
-import org.openrewrite.java.tree.J
 import org.openrewrite.java.tree.J.Modifier.Type.LanguageExtension
 import org.openrewrite.java.tree.JContainer.Location.TYPE_PARAMETERS
 import org.openrewrite.java.tree.JRightPadded.Location.METHOD_INVOCATION_ARGUMENT
@@ -82,6 +81,11 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
             } catch (e: Exception) {
                 System.err.println("Could not transform '$sourcePath' because it contains patterns not (yet) implemented.")
                 System.err.println("Problem: ${e.message}")
+
+                println("-----")
+                println(kotlinString)
+                println("-----")
+
                 false
             }
         }.toMutableList()
@@ -248,6 +252,7 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                 p: PrintOutputCapture<OutputCaptureContext>
             ): J {
                 val isStatic = multiVariable.hasModifier(J.Modifier.Type.Static)
+                val isField = isField(getCursor())
                 if (isStatic) {
                     p.append("// STATIC_START\n")
                 }
@@ -268,7 +273,7 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                 val variables = multiVariable.padding.variables
 
                 for (i in variables.indices) {
-                    val variable = variables.get(i)
+                    val variable = variables[i]
 
                     if (!isFinal && !p.context.isInMethodDeclarationsArguments && !p.context.isInForEach && !p.context.isInLambdaParameters) {
                         if (multiVariable.typeExpression != null) {
@@ -291,7 +296,7 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                         if (variable.element.type !is JavaType.Primitive) {
                             p.append("?") // make every declaration type nullable
                         }
-                        if (isStatic) {
+                        if (isStatic || (!isFinal && isField)) {
                             p.append(" = null")
                         }
                     }
@@ -496,6 +501,20 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                     visitRightPadded(args[i], METHOD_INVOCATION_ARGUMENT, p)
                 }
                 p.append(')')
+            }
+
+            private fun isField(cursor: Cursor): Boolean {
+                val path = cursor.path
+                while (path.hasNext()) {
+                    val o = path.next()
+                    if (o is J.MethodDeclaration) {
+                        return false
+                    }
+                    if (o is J.ClassDeclaration) {
+                        return true
+                    }
+                }
+                return true
             }
         }
     }
