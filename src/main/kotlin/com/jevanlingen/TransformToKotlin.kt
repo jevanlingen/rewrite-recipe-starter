@@ -45,7 +45,8 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
 
     override fun generate(acc: Accumulator, ctx: ExecutionContext): Collection<SourceFile> {
         val kotlinSources = mutableListOf<K.CompilationUnit>()
-        acc.javaSources.forEach { cu ->
+        acc.javaSources = acc.javaSources.filter { cu ->
+            val sourcePath = cu.sourcePath.toString()
             val printOutputCapture = PrintOutputCapture(OutputCaptureContext())
             JavaAsKotlinPrinter().visit(cu, printOutputCapture)
             var kotlinString = printOutputCapture.getOut()
@@ -72,15 +73,18 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                         .get()
                         .withSourcePath(
                             Path(
-                                cu.sourcePath.toString()
+                                sourcePath
                                     .replace(".java", ".kt", true)
                                     .replace("java", "kotlin", true)
                             )
                         ))
+                true
             } catch (e: Exception) {
-                System.err.println(e.message)
+                System.err.println("Could not transform '$sourcePath' because it contains patterns not (yet) implemented.")
+                System.err.println("Problem: ${e.message}")
+                false
             }
-        }
+        }.toMutableList()
 
         return kotlinSources
     }
@@ -88,7 +92,7 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
     override fun getVisitor(acc: Accumulator): TreeVisitor<*, ExecutionContext> {
         return object : TreeVisitor<Tree, ExecutionContext>() {
             override fun visit(tree: Tree?, ctx: ExecutionContext): Tree? {
-                if (tree is J.CompilationUnit) {
+                if (tree is J.CompilationUnit && tree in acc.javaSources) {
                     return null;
                 }
                 return tree
@@ -508,6 +512,6 @@ data class OutputCaptureContext(
     var isInLambdaParameters: Boolean = false,
 )
 
-data class Accumulator(val javaSources: MutableList<J.CompilationUnit>)
+data class Accumulator(var javaSources: MutableList<J.CompilationUnit>)
 
 
