@@ -110,11 +110,75 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                 classDecl: J.ClassDeclaration,
                 p: PrintOutputCapture<OutputCaptureContext>
             ): J {
-                val modifiers = classDecl.modifiers.toMutableList()
-                if (classDecl.kind == J.ClassDeclaration.Kind.Type.Enum) {
-                    modifiers += J.Modifier(randomId(), Space.EMPTY, EMPTY, "enum ", LanguageExtension, emptyList())
+                beforeSyntax(classDecl, CLASS_DECLARATION_PREFIX, p)
+                visit(classDecl.leadingAnnotations, p)
+                for (m in classDecl.modifiers) {
+                    visitModifier(m, p)
                 }
-                return super.visitClassDeclaration(classDecl.withModifiers(modifiers), p)
+
+                val kind =
+                    when (classDecl.kind) {
+                        J.ClassDeclaration.Kind.Type.Enum -> "enum class"
+                        J.ClassDeclaration.Kind.Type.Annotation -> "enum annotation"
+                        J.ClassDeclaration.Kind.Type.Interface -> "interface"
+                        else -> "class"
+                    }
+
+                visit(classDecl.padding.kind.annotations, p)
+                visitSpace(classDecl.padding.kind.prefix, CLASS_KIND, p)
+
+                p.append(kind)
+                visit(classDecl.name, p)
+
+                visitContainer(
+                    "<",
+                    classDecl.padding.typeParameters,
+                    TYPE_PARAMETERS,
+                    ",",
+                    ">",
+                    p
+                )
+
+                if (classDecl.extends != null || classDecl.implements != null) {
+                    classDecl.extends?.let {
+                        visitLeftPadded(":", classDecl.getPadding().extends, JLeftPadded.Location.EXTENDS, p);
+                        classDecl.implements?.let { p.append(",") }
+                    }
+
+                    classDecl.implements?.let {
+                        val container = classDecl.padding.implements!!
+                        if (classDecl.extends == null) {
+                            beforeSyntax(
+                                container.before,
+                                container.markers,
+                                JContainer.Location.IMPLEMENTS.beforeLocation,
+                                p
+                            )
+                            p.append(":")
+                        }
+                        val nodes = container.getPadding().getElements()
+                        for (i in nodes.indices) {
+                            val node: JRightPadded<out J> = nodes[i]
+                            val element: J = node.getElement()
+                            visit(element, p)
+                            visitSpace(
+                                node.after,
+                                JContainer.Location.IMPLEMENTS.elementLocation.afterLocation,
+                                p
+                            )
+                            visitMarkers(node.markers, p)
+                            if (i < nodes.size - 1) {
+                                p.append(",")
+                            }
+                        }
+                        afterSyntax(container.markers, p)
+                    }
+                }
+
+                visit(classDecl.body, p)
+                afterSyntax(classDecl, p)
+
+                return classDecl
             }
 
             override fun visitBlock(block: J.Block, p: PrintOutputCapture<OutputCaptureContext>): J {
@@ -158,7 +222,14 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                 val isSingleExpressionFunction = method.body?.statements?.size == 1
 
                 beforeSyntax(method, METHOD_DECLARATION_PREFIX, p)
-                visit(method.leadingAnnotations, p)
+                visit(
+                    method.leadingAnnotations.filterNot {
+                        TypeUtils.isAssignableTo("java.lang.Override", it.annotationType.type)
+                    }, p
+                )
+                if (TypeUtils.isOverride(m.methodType)) {
+                    p.append("override")
+                }
                 method.modifiers.forEach { visitModifier(it, p) }
 
                 method.annotations.typeParameters?.let {

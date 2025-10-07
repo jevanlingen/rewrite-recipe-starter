@@ -15,10 +15,17 @@ internal class TransformToKotlinTest : RewriteTest {
     fun `class`() {
         rewriteRunJavaToKotlin(
             """
-              class A {}
+              class A extends Object implements AutoCloseable {
+                  @Override
+                  public void close() throws Exception {
+                  }
+              }
               """.trimIndent(),
             """
-              class A {}
+              class A : Object, AutoCloseable {
+                  override fun close() {
+                  }
+              }
               """.trimIndent()
         )
     }
