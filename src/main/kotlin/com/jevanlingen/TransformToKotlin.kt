@@ -574,11 +574,9 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                             type.padding.typeParameters!!.elements[0] is J.Empty)
                     && TypeUtils.asParameterized(type.type)?.typeParameters?.isNotEmpty() == true
                 ) {
-                    p.append("<")
-                    TypeUtils.asParameterized(type.type)?.typeParameters?.forEach {
-                        p.append(it.toString().substringAfterLast('.'))
-                    }
-                    p.append('>')
+                    val params = TypeUtils.asParameterized(type.type)
+                        ?.typeParameters?.joinToString(", ") { it.toString().substringAfterLast('.') } ?: ""
+                    p.append("<$params>")
                 } else {
                     this.visitContainer(
                         "<",
