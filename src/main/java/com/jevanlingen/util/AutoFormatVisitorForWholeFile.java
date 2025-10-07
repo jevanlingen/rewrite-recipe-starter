@@ -23,11 +23,12 @@ import org.openrewrite.java.tree.JavaSourceFile;
 import org.openrewrite.kotlin.format.*;
 import org.openrewrite.kotlin.style.*;
 import org.openrewrite.style.Style;
+import org.openrewrite.tree.ParseError;
 
 import static java.util.Objects.requireNonNull;
 
 // THIS FORMATTER ONLY REMOVES THE `J.CompilationUnit` CHECK, AS WE WANT TO UPDATE WHOLE KOTLIN FILES
-// DON'T ALTER ANYTHING ELSE, BUT ADD A <PR> TO THE OpenRewrite PROJECT IF YOU WANT DIFFENT STYLING
+// DON'T ALTER ANYTHING ELSE, BUT ADD A <PR> TO THE OpenRewrite PROJECT IF YOU WANT DIFFERENT STYLING
 public class AutoFormatVisitorForWholeFile<P> extends AutoFormatVisitor<P> {
     @Nullable
     private final Tree stopAfter;

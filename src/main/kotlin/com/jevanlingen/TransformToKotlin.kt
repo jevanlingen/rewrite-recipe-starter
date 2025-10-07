@@ -22,6 +22,7 @@ import org.openrewrite.kotlin.marker.SingleExpressionBlock
 import org.openrewrite.kotlin.tree.K
 import org.openrewrite.marker.Marker
 import org.openrewrite.marker.Markers.EMPTY
+import org.openrewrite.tree.ParseError
 import kotlin.io.path.Path
 
 class TransformToKotlin : ScanningRecipe<Accumulator>() {
@@ -66,7 +67,12 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                 kotlinSources.add(
                     KotlinParser.builder().build()
                         .parse(kotlinString)
-                        .map { AutoFormatVisitorForWholeFile<ExecutionContext>().visitNonNull(it, ctx) }
+                        .map {
+                            if (it is ParseError) {
+                                throw it.toException()
+                            }
+                            AutoFormatVisitorForWholeFile<ExecutionContext>().visitNonNull(it, ctx)
+                        }
                         .map<K.CompilationUnit> { it.cast() }
                         .findFirst()
                         .get()
