@@ -364,7 +364,7 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                         p.append("(")
                     }
 
-                    visit(variable.getElement().getName(), p)
+                    visit(variable.getElement().name, p)
                     visitSpace(variable.after, VARIABLE_INITIALIZER, p)
 
                     if (multiVariable.typeExpression != null && !p.context.isInForEach && variable.getElement().initializer == null) {
@@ -561,6 +561,36 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                 afterSyntax(forEachLoop, p)
                 p.context.isInForEach = false
                 return forEachLoop
+            }
+
+            override fun visitParameterizedType(
+                type: J.ParameterizedType,
+                p: PrintOutputCapture<OutputCaptureContext>
+            ): J {
+                this.beforeSyntax(type, PARAMETERIZED_TYPE_PREFIX, p)
+                this.visit(type.clazz, p)
+                if ((type.padding.typeParameters == null ||
+                            type.padding.typeParameters!!.elements.isEmpty() ||
+                            type.padding.typeParameters!!.elements[0] is J.Empty)
+                    && TypeUtils.asParameterized(type.type)?.typeParameters?.isNotEmpty() == true
+                ) {
+                    p.append("<")
+                    TypeUtils.asParameterized(type.type)?.typeParameters?.forEach {
+                        p.append(it.toString().substringAfterLast('.'))
+                    }
+                    p.append('>')
+                } else {
+                    this.visitContainer(
+                        "<",
+                        type.padding.typeParameters,
+                        TYPE_PARAMETERS,
+                        ",",
+                        ">",
+                        p
+                    )
+                }
+                this.afterSyntax(type as J, p)
+                return type
             }
 
             private fun visitArgumentsContainer(

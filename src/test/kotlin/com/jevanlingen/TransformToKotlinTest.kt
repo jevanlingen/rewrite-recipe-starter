@@ -40,7 +40,7 @@ internal class TransformToKotlinTest : RewriteTest {
               class A {
                   String a;
                   List<String> c = new ArrayList<String>();
-                  // List<String> d = new ArrayList<>();  <- no support for diamond operator yet
+                  List<String> d = new ArrayList<>();
                   String e = "x";
                   var f = "x";
                   final var g = "x";
@@ -58,7 +58,7 @@ internal class TransformToKotlinTest : RewriteTest {
               class A {
                   var a: String? = null
                   var c = ArrayList<String>()
-                  // List<String> d = new ArrayList<>();  <- no support for diamond operator yet
+                  var d = ArrayList<String>()
                   var e = "x"
                   var f = "x"
                   val g = "x"
