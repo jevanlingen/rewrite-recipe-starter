@@ -45,6 +45,10 @@ internal class TransformToKotlinTest : RewriteTest {
                   var f = "x";
                   final var g = "x";
                   final String h = "x";
+                  String[][] data = {
+                      {"a", "b"},
+                      {"c", "d"}
+                  };
                   
                   void test() {
                       String b;
@@ -63,6 +67,10 @@ internal class TransformToKotlinTest : RewriteTest {
                   var f = "x"
                   val g = "x"
                   val h = "x"
+                  var data = arrayOf(
+                      arrayOf("a", "b"),
+                      arrayOf("c", "d")
+                  )
               
                   fun test() {
                       var b: String?

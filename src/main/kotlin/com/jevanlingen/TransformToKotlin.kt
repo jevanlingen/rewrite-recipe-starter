@@ -118,22 +118,22 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
             ): J {
                 beforeSyntax(classDecl, CLASS_DECLARATION_PREFIX, p)
                 visit(classDecl.leadingAnnotations, p)
+                if (classDecl.leadingAnnotations.isNotEmpty()) {
+                    p.append("\n")
+                }
                 for (m in classDecl.modifiers) {
                     visitModifier(m, p)
                 }
 
-                val kind =
+                visit(classDecl.padding.kind.annotations, p)
+                p.append(
                     when (classDecl.kind) {
                         J.ClassDeclaration.Kind.Type.Enum -> "enum class"
-                        J.ClassDeclaration.Kind.Type.Annotation -> "enum annotation"
+                        J.ClassDeclaration.Kind.Type.Annotation -> "annotation class"
                         J.ClassDeclaration.Kind.Type.Interface -> "interface"
                         else -> "class"
                     }
-
-                visit(classDecl.padding.kind.annotations, p)
-                visitSpace(classDecl.padding.kind.prefix, CLASS_KIND, p)
-
-                p.append(kind)
+                )
                 visit(classDecl.name, p)
 
                 visitContainer(
@@ -591,6 +591,71 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                 return type
             }
 
+            override fun visitAssignment(assignment: J.Assignment, p: PrintOutputCapture<OutputCaptureContext>): J {
+                val shouldAddArrayOperator =
+                    p.context.isInAnnotation != 0 &&
+                            assignment.type is JavaType.Array &&
+                            assignment.assignment is J.Annotation
+
+                this.beforeSyntax(assignment, ASSIGNMENT_PREFIX, p)
+                this.visit(assignment.variable, p)
+                this.visitLeftPadded(
+                    if (shouldAddArrayOperator) "= [" else "=",
+                    assignment.padding.assignment, JLeftPadded.Location.ASSIGNMENT, p
+                )
+                if (shouldAddArrayOperator) {
+                    p.append(" ]")
+                }
+                this.afterSyntax(assignment as J, p)
+                return assignment
+            }
+
+            override fun visitAnnotation(annotation: J.Annotation, p: PrintOutputCapture<OutputCaptureContext>): J {
+                p.context.isInAnnotation++
+                this.beforeSyntax(annotation, ANNOTATION_PREFIX, p)
+                if (p.context.isInAnnotation == 1) {
+                    p.append("@")
+                }
+                this.visit(annotation.annotationType, p)
+                this.visitContainer(
+                    "(",
+                    annotation.padding.arguments,
+                    JContainer.Location.ANNOTATION_ARGUMENTS,
+                    ",",
+                    ")",
+                    p
+                )
+                this.afterSyntax(annotation, p)
+                p.context.isInAnnotation--
+                return annotation
+            }
+
+            override fun visitNewArray(newArray: J.NewArray, p: PrintOutputCapture<OutputCaptureContext>): J {
+                this.beforeSyntax(newArray, NEW_ARRAY_PREFIX, p)
+                this.visit(newArray.typeExpression, p)
+                this.visit(newArray.dimensions, p)
+                this.visitContainer(
+                    if (p.context.isInAnnotation != 0) "[" else "arrayOf(",
+                    newArray.padding.initializer,
+                    JContainer.Location.NEW_ARRAY_INITIALIZER,
+                    ",",
+                    if (p.context.isInAnnotation != 0) "]" else ")",
+                    p
+                )
+                this.afterSyntax(newArray as J, p)
+                return newArray
+            }
+
+            override fun visitArrayType(arrayType: J.ArrayType, p: PrintOutputCapture<OutputCaptureContext>): J {
+                this.beforeSyntax(arrayType, ARRAY_TYPE_PREFIX, p)
+                val dimensions = arrayType.toString().count { it == '[' }
+                repeat(dimensions) { p.append("Array<") }
+                p.append(arrayType.elementType.toString())
+                repeat(dimensions) { p.append(">") }
+                this.afterSyntax(arrayType as J, p)
+                return arrayType
+            }
+
             private fun visitArgumentsContainer(
                 argContainer: JContainer<Expression>,
                 argsLocation: Space.Location,
@@ -631,6 +696,7 @@ data class OutputCaptureContext(
     var isInSwitch: Boolean = false,
     var isInMethodBodyDeclarationsSingleExpressionFunction: Any? = null,
     var isInLambdaParameters: Boolean = false,
+    var isInAnnotation: Int = 0,
 )
 
 data class Accumulator(var javaSources: MutableList<J.CompilationUnit>)
