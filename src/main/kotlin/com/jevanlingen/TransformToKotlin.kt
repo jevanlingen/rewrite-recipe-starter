@@ -15,10 +15,7 @@ import org.openrewrite.java.tree.Space.Location.*
 import org.openrewrite.java.tree.Space.SINGLE_SPACE
 import org.openrewrite.kotlin.KotlinParser
 import org.openrewrite.kotlin.internal.KotlinPrinter
-import org.openrewrite.kotlin.marker.Extension
-import org.openrewrite.kotlin.marker.OmitBraces
-import org.openrewrite.kotlin.marker.Semicolon
-import org.openrewrite.kotlin.marker.SingleExpressionBlock
+import org.openrewrite.kotlin.marker.*
 import org.openrewrite.kotlin.tree.K
 import org.openrewrite.marker.Marker
 import org.openrewrite.marker.Markers.EMPTY
@@ -59,7 +56,8 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                 if (lastBrace != -1) {
                     val staticContent = staticMembers.joinToString("\n\n") { it.trim() }
                     val companionObject = "\ncompanion object {$staticContent}\n"
-                    kotlinString = kotlinString.substring(0, lastBrace) + companionObject + kotlinString.substring(lastBrace)
+                    kotlinString =
+                        kotlinString.substring(0, lastBrace) + companionObject + kotlinString.substring(lastBrace)
                 }
             }
 
@@ -123,6 +121,9 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                 }
                 for (m in classDecl.modifiers) {
                     visitModifier(m, p)
+                }
+                if (classDecl.modifiers.isNotEmpty()) {
+                    p.append(" ")
                 }
 
                 visit(classDecl.padding.kind.annotations, p)
@@ -209,6 +210,17 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                     return super.visitBlock(blockWithMarkers, p)
                 }
                 return super.visitBlock(block, p)
+            }
+
+            override fun visitTypeParameter(
+                typeParam: J.TypeParameter,
+                p: PrintOutputCapture<OutputCaptureContext>
+            ): J {
+                val x = typeParam.bounds
+                    ?.takeIf { it.isNotEmpty() }
+                    ?.let { typeParam.withMarkers(typeParam.markers.add(TypeReferencePrefix(randomId(), Space.EMPTY))) }
+                    ?: typeParam
+                return super.visitTypeParameter(x, p)
             }
 
             override fun visitMethodDeclaration(
@@ -739,6 +751,6 @@ data class Accumulator(var javaSources: MutableList<J.CompilationUnit>)
 
 private fun J.MethodInvocation.isPropertyInKotlin() =
     this.simpleName == "size" && this.methodType?.declaringType?.fullyQualifiedName?.startsWith("java.util") == true ||
-    this.simpleName == "length" && this.methodType?.declaringType?.fullyQualifiedName == "java.lang.String"
+            this.simpleName == "length" && this.methodType?.declaringType?.fullyQualifiedName == "java.lang.String"
 
 

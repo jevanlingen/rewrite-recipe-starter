@@ -15,14 +15,14 @@ internal class TransformToKotlinTest : RewriteTest {
     fun `class`() {
         rewriteRunJavaToKotlin(
             """
-              class A extends Object implements AutoCloseable {
+              public abstract class A extends Object implements AutoCloseable {
                   @Override
                   public void close() throws Exception {
                   }
               }
               """.trimIndent(),
             """
-              class A : Object, AutoCloseable {
+              abstract class A : Object, AutoCloseable {
                   override fun close() {
                   }
               }
@@ -220,7 +220,7 @@ internal class TransformToKotlinTest : RewriteTest {
             class A<T> {
                 private List<T> list;
 
-                <U> void b(U u) {
+                <U extends Object> void b(U u) {
                 }
             }
             """.trimIndent(),
@@ -230,7 +230,7 @@ internal class TransformToKotlinTest : RewriteTest {
             class A<T> {
                 private var list: List<T>? = null
 
-                fun <U> b(u: U?) {
+                fun <U : Object> b(u: U?) {
                 }
             }
             """.trimIndent()
