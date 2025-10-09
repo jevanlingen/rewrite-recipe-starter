@@ -15,7 +15,10 @@ import org.openrewrite.java.tree.Space.Location.*
 import org.openrewrite.java.tree.Space.SINGLE_SPACE
 import org.openrewrite.kotlin.KotlinParser
 import org.openrewrite.kotlin.internal.KotlinPrinter
-import org.openrewrite.kotlin.marker.*
+import org.openrewrite.kotlin.marker.Extension
+import org.openrewrite.kotlin.marker.OmitBraces
+import org.openrewrite.kotlin.marker.Semicolon
+import org.openrewrite.kotlin.marker.SingleExpressionBlock
 import org.openrewrite.kotlin.tree.K
 import org.openrewrite.marker.Marker
 import org.openrewrite.marker.Markers.EMPTY
@@ -437,6 +440,23 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
 
                 afterSyntax(method, p)
                 return method
+            }
+
+            override fun visitLambda(lambda: J.Lambda, p: PrintOutputCapture<OutputCaptureContext>): J {
+                this.beforeSyntax(lambda, LAMBDA_PREFIX, p)
+                p.append('{')
+                val parameters = lambda.parameters
+                if (!parameters.parameters.isEmpty() && parameters.parameters[0] !is J.Empty) {
+                    this.visitSpace(parameters.prefix, LAMBDA_PARAMETER, p)
+                    this.visitLambdaParameters(parameters, p)
+                    this.visitSpace(lambda.arrow, LAMBDA_ARROW_PREFIX, p)
+                    p.append("->")
+                }
+
+                this.visit(lambda.body, p)
+                p.append('}')
+                this.afterSyntax(lambda, p)
+                return lambda
             }
 
             override fun visitLambdaParameters(

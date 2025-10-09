@@ -155,19 +155,23 @@ internal class TransformToKotlinTest : RewriteTest {
             """
               import java.util.List;
               import java.util.Objects;
+              import java.util.Optional;
               import java.util.stream.Stream;
               
               class A {
                   List<String> x = Stream.of(1, 2, null).filter(Objects::nonNull).map(x -> x.toString() + "..").toList();
+                  Integer y = Optional.of(1).orElseThrow(() -> new IllegalArgumentException("x"));
               }
               """.trimIndent(),
             """
               import java.util.List;
               import java.util.Objects;
+              import java.util.Optional;
               import java.util.stream.Stream;
               
               class A {
                   var x = Stream.of(1, 2, null)?.filter(Objects::nonNull)?.map({ x -> x?.toString() + ".." })?.toList()
+                  var y = Optional.of(1)?.orElseThrow({ IllegalArgumentException("x")})
               }
               """.trimIndent()
         )
