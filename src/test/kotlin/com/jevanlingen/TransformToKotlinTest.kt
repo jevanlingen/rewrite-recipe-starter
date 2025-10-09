@@ -522,6 +522,22 @@ internal class TransformToKotlinTest : RewriteTest {
         )
     }
 
+    @Test
+    fun dotClass() {
+        rewriteRunJavaToKotlin(
+            """
+            class A {
+                Class<?> x = A.class;
+            }
+            """.trimIndent(),
+            """
+            class A {
+                var x = A::class.java
+            }
+            """.trimIndent()
+        )
+    }
+
     private fun rewriteRunJavaToKotlin(@Language("java") before: String, @Language("kotlin") after: String) {
         rewriteRun(
             { spec ->

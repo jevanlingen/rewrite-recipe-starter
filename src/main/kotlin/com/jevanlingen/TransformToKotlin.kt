@@ -15,10 +15,7 @@ import org.openrewrite.java.tree.Space.Location.*
 import org.openrewrite.java.tree.Space.SINGLE_SPACE
 import org.openrewrite.kotlin.KotlinParser
 import org.openrewrite.kotlin.internal.KotlinPrinter
-import org.openrewrite.kotlin.marker.Extension
-import org.openrewrite.kotlin.marker.OmitBraces
-import org.openrewrite.kotlin.marker.Semicolon
-import org.openrewrite.kotlin.marker.SingleExpressionBlock
+import org.openrewrite.kotlin.marker.*
 import org.openrewrite.kotlin.tree.K
 import org.openrewrite.marker.Marker
 import org.openrewrite.marker.Markers.EMPTY
@@ -671,6 +668,23 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                     visitRightPadded(args[i], METHOD_INVOCATION_ARGUMENT, p)
                 }
                 p.append(')')
+            }
+
+            override fun visitFieldAccess(fieldAccess: J.FieldAccess, p: PrintOutputCapture<OutputCaptureContext>): J {
+                val isClass = TypeUtils.isAssignableTo("java.lang.Class", fieldAccess.type)
+                this.beforeSyntax(fieldAccess, FIELD_ACCESS_PREFIX, p)
+                this.visit(fieldAccess.target, p)
+                this.visitLeftPadded(
+                    if (isClass) "::" else ".",
+                    fieldAccess.padding.name,
+                    JLeftPadded.Location.FIELD_ACCESS_NAME,
+                    p
+                )
+                if (isClass) {
+                    p.append(".java")
+                }
+                this.afterSyntax(fieldAccess, p)
+                return fieldAccess
             }
 
             private fun isField(cursor: Cursor): Boolean {
