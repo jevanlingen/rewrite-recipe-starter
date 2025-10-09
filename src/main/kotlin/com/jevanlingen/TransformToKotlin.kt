@@ -411,7 +411,7 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                 visitRightPadded(method.padding.select, METHOD_SELECT, p)
                 if (method.select != null) {
                     // In Java, the return type will always be: `T | null` for non-static method, so to be sure, use the null safe operator if method call is not static
-                    if (method.methodType?.hasFlags(Static) != true) {
+                    if (method.methodType?.hasFlags(Static) != true && method.select !is J.Literal) {
                         p.append("?")
                     }
                     p.append(".")
@@ -427,11 +427,13 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                     p
                 )
 
-                visitArgumentsContainer(
-                    method.padding.arguments,
-                    METHOD_INVOCATION_ARGUMENTS,
-                    p
-                )
+                if (!method.isPropertyInKotlin()) {
+                    visitArgumentsContainer(
+                        method.padding.arguments,
+                        METHOD_INVOCATION_ARGUMENTS,
+                        p
+                    )
+                }
 
                 afterSyntax(method, p)
                 return method
@@ -714,5 +716,9 @@ data class OutputCaptureContext(
 )
 
 data class Accumulator(var javaSources: MutableList<J.CompilationUnit>)
+
+private fun J.MethodInvocation.isPropertyInKotlin() =
+    this.simpleName == "size" && this.methodType?.declaringType?.fullyQualifiedName?.startsWith("java.util") == true ||
+    this.simpleName == "length" && this.methodType?.declaringType?.fullyQualifiedName == "java.lang.String"
 
 

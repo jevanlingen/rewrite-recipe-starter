@@ -538,6 +538,32 @@ internal class TransformToKotlinTest : RewriteTest {
         )
     }
 
+    @Test
+    fun propertiesInsteadOfMethodCalls() {
+        rewriteRunJavaToKotlin(
+            """
+            import java.util.ArrayList;
+            import java.util.List;
+            
+            class A {
+                int x = List.of().size();
+                int y = new ArrayList<String>().size();
+                int z = "string".length();
+            }
+            """.trimIndent(),
+            """
+            import java.util.ArrayList;
+            import java.util.List;
+            
+            class A {
+                var x = List.of()?.size
+                var y = ArrayList<String>()?.size
+                var z = "string".length
+            }
+            """.trimIndent()
+        )
+    }
+
     private fun rewriteRunJavaToKotlin(@Language("java") before: String, @Language("kotlin") after: String) {
         rewriteRun(
             { spec ->
