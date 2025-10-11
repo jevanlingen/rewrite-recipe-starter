@@ -609,7 +609,12 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                         ?.typeParameters?.joinToString(", ") {
                             it.toString().let { s -> if (s == "java.lang.Object") "Any?" else s.substringAfterLast('.') }
                         } ?: ""
-                    p.append("<${params.replace("Generic{?}", "*")}>")
+
+                    // Diamond operators with type params like `Generic{T extends A<Generic{T}>}` do not have a Kotlin equivalent
+                    // in such cases, don't add generics at all and hope the code does still compile
+                    if (Regex("Generic").findAll(params).count() < 2) {
+                        p.append("<${params.replace(Regex("Generic\\{[^}]+}"), "*").replace("}", "")}>")
+                    }
                 } else {
                     this.visitContainer(
                         "<",

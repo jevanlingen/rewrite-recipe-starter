@@ -212,7 +212,7 @@ internal class TransformToKotlinTest : RewriteTest {
     }
 
     @Test
-    fun `generics`() {
+    fun generics() {
         rewriteRunJavaToKotlin(
             """
             import java.util.List;
@@ -248,6 +248,23 @@ internal class TransformToKotlinTest : RewriteTest {
            
                 fun supports(clazz: Class<*>?) {
                 }
+            }
+            """.trimIndent()
+        )
+    }
+
+    @Test
+    fun selfReferentialGenericType() {
+        // N.B. Constructs like `class A<T extends A<T, U>, U>` with the diamond operator do not have a direct Kotlin equivalent :(
+        rewriteRunJavaToKotlin(
+            """
+            class A<T extends A<T>> {
+                private A<?> container = new A<>();
+            }
+            """.trimIndent(),
+            """
+            class A<T : A<T>> {
+                private var container = A()
             }
             """.trimIndent()
         )
