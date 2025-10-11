@@ -606,8 +606,10 @@ class TransformToKotlin : ScanningRecipe<Accumulator>() {
                     && TypeUtils.asParameterized(type.type)?.typeParameters?.isNotEmpty() == true
                 ) {
                     val params = TypeUtils.asParameterized(type.type)
-                        ?.typeParameters?.joinToString(", ") { it.toString().substringAfterLast('.') } ?: ""
-                    p.append("<$params>")
+                        ?.typeParameters?.joinToString(", ") {
+                            it.toString().let { s -> if (s == "java.lang.Object") "Any?" else s.substringAfterLast('.') }
+                        } ?: ""
+                    p.append("<${params.replace("Generic{?}", "*")}>")
                 } else {
                     this.visitContainer(
                         "<",

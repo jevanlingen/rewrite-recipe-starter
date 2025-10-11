@@ -216,21 +216,37 @@ internal class TransformToKotlinTest : RewriteTest {
         rewriteRunJavaToKotlin(
             """
             import java.util.List;
+            import java.util.function.Function;
 
             class A<T> {
+                private A<A<A<?>>> a = new A<>();
                 private List<T> list;
 
                 <U extends Object> void b(U u) {
+                }
+                
+                <A, B> void map(Function<? super A, ? extends B> mapper) {
+                }
+                
+                void supports(Class<?> clazz) {
                 }
             }
             """.trimIndent(),
             """
             import java.util.List;
+            import java.util.function.Function;
 
             class A<T> {
+                private var a = A<A<A<*>>>()
                 private var list: List<T>? = null
 
                 fun <U : Object> b(u: U?) {
+                }
+            
+                fun <A, B> map(mapper: Function<in A, out B>?) {
+                }
+           
+                fun supports(clazz: Class<*>?) {
                 }
             }
             """.trimIndent()
